@@ -14,8 +14,8 @@ from .models import (
 
 from .serializer import (
     CompanySerializer,
-    AcivityNatureSerializer,
-    WorkTypeSerialiser,
+    ActivityNatureSerializer,
+    WorkTypeSerializer,
     StructureSerializer,
     InstallationSerializer,
     WorkSerializer,
@@ -27,11 +27,6 @@ from .serializer import (
 class CompanyView(generics.ListCreateAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-
-    def perform_create(self, serializer):
-        serializer.save(
-            
-        )
 
 
 class CompanyDetail(generics.RetrieveAPIView):
@@ -51,6 +46,6 @@ class CompanyUpdate(generics.UpdateAPIView):
         serializer.save(updated_by=self.request.user, updated_at=timezone.now())
 
 
-class CompanyDelete(generics.DestroyAPIView):
+class CompanyDelete(generics.RetrieveDestroyAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
