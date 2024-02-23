@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from django.utils import timezone
-from fyproject.permissions import CanCreateDeleteUpdatePermission
+from fyproject.mixins import BaseEditorPermissionMixin
 from rest_framework import permissions
 from .models import (
     Company,
@@ -22,6 +22,7 @@ from .serializer import (
     WorkSerializer,
     StructureTypeSerializer,
 )
+
 
 class CreatedFieldsMixin:
     def perform_create(self, serializer):
@@ -45,34 +46,31 @@ class CreatedFieldsMixin:
         serializer.save(**updated_fields)
 
 
-class BaseModelViewSet(CreatedFieldsMixin, viewsets.ModelViewSet):
+class BaseModelViewSet(
+    BaseEditorPermissionMixin, CreatedFieldsMixin, viewsets.ModelViewSet
+):
     """
     Base ViewSet with CreatedFieldsMixin for common functionality.
     """
+
     lookup_field = "code"
-    def get_permissions(self):
-        if self.action in ["create", "destroy", "update"]:
-            return [CanCreateDeleteUpdatePermission()]
-        elif self.action in ["list", "retrieve"]:
-            return [permissions.IsAuthenticated(), ]  # Use a more restrictive permission here if needed
-        else:
-            return [CanCreateDeleteUpdatePermission(), ]
-    
-class CompanyViewSet(BaseModelViewSet):
+
+
+class CompanyViewSet(
+    BaseModelViewSet,
+):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-   
+
 
 class StructureViewSet(BaseModelViewSet):
     queryset = Structure.objects.all()
     serializer_class = StructureSerializer
-    
 
 
 class ActivityNatureViewSet(BaseModelViewSet):
     queryset = ActivityNature.objects.all()
     serializer_class = ActivityNatureSerializer
-   
 
 
 class StructureTypeViewSet(BaseModelViewSet):
@@ -80,11 +78,9 @@ class StructureTypeViewSet(BaseModelViewSet):
     serializer_class = StructureTypeSerializer
 
 
-
 class WorkViewSet(BaseModelViewSet):
     queryset = Work.objects.all()
     serializer_class = WorkSerializer
-
 
 
 class WorkTypeViewSet(BaseModelViewSet):
@@ -92,8 +88,6 @@ class WorkTypeViewSet(BaseModelViewSet):
     serializer_class = WorkTypeSerializer
 
 
-
 class InstallationViewSet(BaseModelViewSet):
     queryset = Installation.objects.all()
     serializer_class = InstallationSerializer
-

@@ -4,20 +4,15 @@ from .models import User
 from .serializer import UserSerializer
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
-from fyproject.mixins import CompanyEditorPermissionMixin
+from fyproject.mixins import UserEditorPermissionMixin
+
 
 class UserViewSet(
-    CompanyEditorPermissionMixin,
+    UserEditorPermissionMixin,
     viewsets.ModelViewSet,
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'create']:
-            return [permissions.IsAuthenticated()]
-        else:
-            return [CompanyEditorPermissionMixin()]  # Adjust as needed
 
     def perform_create(self, serializer):
         created_fields = {

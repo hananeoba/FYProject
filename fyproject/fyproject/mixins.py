@@ -1,5 +1,19 @@
 from rest_framework import permissions
 
+from .permissions import (
+    CanModifyOrViewPermissionDataBase,
+    CanModifyOrViewPermissionEvent,
+    CanModifyOrViewPermissionUser,
+)
 
-class CompanyEditorPermissionMixin:
-    permission_classes = [permissions.AllowAny ]
+
+class BaseEditorPermissionMixin:
+    permission_classes = [CanModifyOrViewPermissionDataBase]
+
+
+class EventEditorPermissionMixin:
+    permission_classes = [CanModifyOrViewPermissionEvent]
+
+
+class UserEditorPermissionMixin:
+    permission_classes = [CanModifyOrViewPermissionUser]
