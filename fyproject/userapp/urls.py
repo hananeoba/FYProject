@@ -1,7 +1,12 @@
-from django.urls import path
-from . import views
+
+from .routers import  router
+from rest_framework.authtoken.views import obtain_auth_token
+from django.urls import path, include
+
 
 urlpatterns = [
-    path('', views.UserListView.as_view()),
-    path('<str:username>/', views.UserDetailView.as_view()),
+    path('', include(router.urls)),
+    path('auth/', obtain_auth_token),
+
 ]
+    # other paths...

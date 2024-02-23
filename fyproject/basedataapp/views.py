@@ -1,5 +1,7 @@
-from rest_framework import generics, mixins
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from django.utils import timezone
+from fyproject.permissions import CanCreateDeleteUpdatePermission
 from rest_framework import permissions
 from .models import (
     Company,
@@ -20,7 +22,6 @@ from .serializer import (
     WorkSerializer,
     StructureTypeSerializer,
 )
-
 
 class CreatedFieldsMixin:
     def perform_create(self, serializer):
@@ -44,83 +45,55 @@ class CreatedFieldsMixin:
         serializer.save(**updated_fields)
 
 
-class CompanyListView(CreatedFieldsMixin, generics.ListCreateAPIView):
+class BaseModelViewSet(CreatedFieldsMixin, viewsets.ModelViewSet):
+    """
+    Base ViewSet with CreatedFieldsMixin for common functionality.
+    """
+    lookup_field = "code"
+    def get_permissions(self):
+        if self.action in ["create", "destroy", "update"]:
+            return [CanCreateDeleteUpdatePermission()]
+        elif self.action in ["list", "retrieve"]:
+            return [permissions.IsAuthenticated(), ]  # Use a more restrictive permission here if needed
+        else:
+            return [CanCreateDeleteUpdatePermission(), ]
+    
+class CompanyViewSet(BaseModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
+   
 
-
-class CompanyDetailView(CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = Company.objects.all()
-    serializer_class = CompanySerializer
-    lookup_field = "code"
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-
-class StructureListView(CreatedFieldsMixin, generics.ListCreateAPIView):
+class StructureViewSet(BaseModelViewSet):
     queryset = Structure.objects.all()
     serializer_class = StructureSerializer
+    
 
 
-class StructureDetailView(CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = Structure.objects.all()
-    serializer_class = StructureSerializer
-    lookup_field = "code"
-
-
-class ActivityNatureListView(CreatedFieldsMixin, generics.ListCreateAPIView):
+class ActivityNatureViewSet(BaseModelViewSet):
     queryset = ActivityNature.objects.all()
     serializer_class = ActivityNatureSerializer
+   
 
 
-class ActivityNatureDetailView(
-    CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView
-):
-    queryset = ActivityNature.objects.all()
-    serializer_class = ActivityNatureSerializer
-    lookup_field = "code"
-
-
-class StructureTypeListView(CreatedFieldsMixin, generics.ListCreateAPIView):
+class StructureTypeViewSet(BaseModelViewSet):
     queryset = StructureType.objects.all()
     serializer_class = StructureTypeSerializer
 
 
-class StructureTypeDetailView(
-    CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView
-):
-    queryset = StructureType.objects.all()
-    serializer_class = StructureTypeSerializer
-    lookup_field = "code"
 
-
-class WorkListView(CreatedFieldsMixin, generics.ListCreateAPIView):
+class WorkViewSet(BaseModelViewSet):
     queryset = Work.objects.all()
     serializer_class = WorkSerializer
 
 
-class WorkDetailView(CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = Work.objects.all()
-    serializer_class = WorkSerializer
-    lookup_field = "code"
 
-
-class WorkTypeListView(CreatedFieldsMixin, generics.ListCreateAPIView):
+class WorkTypeViewSet(BaseModelViewSet):
     queryset = WorkType.objects.all()
     serializer_class = WorkTypeSerializer
 
 
-class WorkTypeDetailView(CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = WorkType.objects.all()
-    serializer_class = WorkTypeSerializer
-    lookup_field = "code"
 
-
-class InstallationListView(CreatedFieldsMixin, generics.ListCreateAPIView):
+class InstallationViewSet(BaseModelViewSet):
     queryset = Installation.objects.all()
     serializer_class = InstallationSerializer
 
-
-class InstallationDetailView(CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = Installation.objects.all()
-    serializer_class = InstallationSerializer
-    lookup_field = "code"

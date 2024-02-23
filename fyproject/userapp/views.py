@@ -1,14 +1,24 @@
-from django.shortcuts import render
-from rest_framework import generics, authentication, permissions
-from django.contrib.auth.hashers import make_password
-
+from rest_framework import viewsets, permissions
+from rest_framework.response import Response
 from .models import User
 from .serializer import UserSerializer
 from django.utils import timezone
-from rest_framework.authtoken.models import Token
+from django.contrib.auth.hashers import make_password
+from fyproject.mixins import CompanyEditorPermissionMixin
 
+class UserViewSet(
+    CompanyEditorPermissionMixin,
+    viewsets.ModelViewSet,
+):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
-class CreatedFieldsMixin:
+    def get_permissions(self):
+        if self.action in ['list', 'create']:
+            return [permissions.IsAuthenticated()]
+        else:
+            return [CompanyEditorPermissionMixin()]  # Adjust as needed
+
     def perform_create(self, serializer):
         created_fields = {
             "created_by": (
@@ -30,23 +40,3 @@ class CreatedFieldsMixin:
             "password": make_password(serializer.validated_data["password"]),
         }
         serializer.save(**updated_fields)
-
-
-# Import the missing module
-
-
-class UserListView(CreatedFieldsMixin, generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    """authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-    """
-
-
-class UserDetailView(CreatedFieldsMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = "username"
-
-
-# Create your views here.
