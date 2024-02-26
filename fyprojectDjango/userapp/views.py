@@ -1,10 +1,17 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import User
-from .serializer import UserSerializer
+from .serializer import UserSerializer, MyTokenObtainPairSerializer
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 from fyproject.mixins import UserEditorPermissionMixin
+
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
 class UserViewSet(

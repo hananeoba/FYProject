@@ -172,19 +172,20 @@ class CanModifyOrViewPermissionEvent(permissions.BasePermission):
 
 class CanModifyOrViewPermissionUser(permissions.BasePermission):
     def has_permission(self, request, view):
+        user = request.user.id
+        user_id = view.kwargs.get("pk")  # this is from url
         if view.__class__.__name__ == "UserViewSet":
             if request.method == "GET":
-                return request.user.has_perm("userapp.view_user")
-
-            if (
-                request.method == "POST"
-                or request.method == "DELETE"
-                or request.method == "PUT"
-                or request.method == "PATCH"
-            ):
+                return (
+                    request.user.has_perm("userapp.view_user") or str(user) == user_id
+                )
+            if request.method == "POST":
+                return True
+            if request.method in ["DELETE", "PUT", "PATCH"]:
                 return (
                     request.user.has_perm("userapp.delete_user")
                     or request.user.has_perm("userapp.add_user")
                     or request.user.has_perm("userapp.change_user")
+                    or str(user) == user_id
                 )
-        return False
+        return str == user_id

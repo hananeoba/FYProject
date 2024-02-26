@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group, PermissionsMixin
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
 
 
 class AbstractUserModel(models.Model):
@@ -25,8 +25,7 @@ class AbstractUserModel(models.Model):
 
 
 class User(AbstractUser, AbstractUserModel, PermissionsMixin):
-    pass
-
+    email = models.EmailField(unique=True)
     user_company = models.ForeignKey(
         "basedataapp.Company", on_delete=models.PROTECT, null=True, blank=True
     )
@@ -34,6 +33,8 @@ class User(AbstractUser, AbstractUserModel, PermissionsMixin):
         "basedataapp.Structure", on_delete=models.PROTECT, null=True, blank=True
     )
     user_role = models.CharField(max_length=100, null=True, blank=True)
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["password", "username" ]
 
     def __str__(self):
         return self.username
