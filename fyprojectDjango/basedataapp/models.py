@@ -2,8 +2,8 @@ from django.db import models
 from django.utils import timezone
 
 
-# Create your models here.
 class AbstrctBaseModel(models.Model):
+    # audit fields
     code = models.CharField(max_length=100, unique=True)
     label = models.CharField(max_length=100)
     created_by = models.ForeignKey(

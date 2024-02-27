@@ -24,5 +24,4 @@ urlpatterns = [
     path("api/basedata/", include("basedataapp.urls")),
     path("api/user/", include("userapp.urls")),
     path("api/events/", include("eventapp.urls")),
-   
 ]

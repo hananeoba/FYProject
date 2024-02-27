@@ -2,8 +2,7 @@ from rest_framework import permissions
 
 
 class CanModifyOrViewPermissionDataBase(permissions.BasePermission):
-    message = "You do not have permission to perform this action."
-
+# basebataapp permissions 
     def has_permission(self, request, view):
 
         if view.__class__.__name__ == "CompanyViewSet":
@@ -11,9 +10,9 @@ class CanModifyOrViewPermissionDataBase(permissions.BasePermission):
                 return request.user.has_perm("basedataapp.view_company")
 
             if (
-                request.method == "POST"
-                or request.method == "DELETE"
-                or request.method == "PUT"
+                request.method == "POST"# create 
+                or request.method == "DELETE"# or delete
+                or request.method == "PUT"  # or update
                 or request.method == "PATCH"
             ):
                 return (
@@ -121,6 +120,7 @@ class CanModifyOrViewPermissionDataBase(permissions.BasePermission):
 
 
 class CanModifyOrViewPermissionEvent(permissions.BasePermission):
+    # eventapp permissions 
     def has_permission(self, request, view):
         if view.__class__.__name__ == "EventViewSet":
             if request.method == "GET":
@@ -171,21 +171,23 @@ class CanModifyOrViewPermissionEvent(permissions.BasePermission):
 
 
 class CanModifyOrViewPermissionUser(permissions.BasePermission):
+    # userapp permissions
     def has_permission(self, request, view):
         user = request.user.id
         user_id = view.kwargs.get("pk")  # this is from url
         if view.__class__.__name__ == "UserViewSet":
-            if request.method == "GET":
+            if request.method == "GET":# only user can see his/her profile
                 return (
                     request.user.has_perm("userapp.view_user") or str(user) == user_id
                 )
             if request.method == "POST":
+                #everyone can create user but is it true? 
                 return True
             if request.method in ["DELETE", "PUT", "PATCH"]:
                 return (
                     request.user.has_perm("userapp.delete_user")
                     or request.user.has_perm("userapp.add_user")
-                    or request.user.has_perm("userapp.change_user")
-                    or str(user) == user_id
+                    or request.user.has_perm("userapp.change_user")# who have permission 
+                    or str(user) == user_id# or users themselfs
                 )
-        return str == user_id
+        return str(user) == user_id

@@ -1,5 +1,3 @@
-from rest_framework import permissions
-
 from .permissions import (
     CanModifyOrViewPermissionDataBase,
     CanModifyOrViewPermissionEvent,

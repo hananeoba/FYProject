@@ -17,16 +17,12 @@ class AbstrctBaseModelSerializer(serializers.ModelSerializer):
         model = AbstrctBaseModel
         fields = "__all__"
 
-    def get_fields(self):
-        fields = super().get_fields()
-
-        # Make created_by and updated_by read-only
-        fields["created_by"].read_only = True
-        fields["updated_by"].read_only = True
-        fields["created_at"].read_only = True
-        fields["updated_at"].read_only = True
-
-        return fields
+        extra_kwargs = {
+            "created_by": {"read_only": True},
+            "updated_by": {"read_only": True},
+            "created_at": {"read_only": True},
+            "updated_at": {"read_only": True},
+        }
 
 
 class ActivityNatureSerializer(AbstrctBaseModelSerializer):

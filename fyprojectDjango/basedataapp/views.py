@@ -1,8 +1,6 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from django.utils import timezone
 from fyproject.mixins import BaseEditorPermissionMixin
-from rest_framework import permissions
 from .models import (
     Company,
     WorkType,
@@ -53,7 +51,8 @@ class BaseModelViewSet(
     Base ViewSet with CreatedFieldsMixin for common functionality.
     """
 
-    lookup_field = "code"
+
+# lookup_field = "code"  should it be added or no ?
 
 
 class CompanyViewSet(
