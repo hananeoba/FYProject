@@ -1,5 +1,3 @@
-from rest_framework import viewsets, status
-from rest_framework.response import Response
 from .models import User
 from .serializer import UserSerializer, MyTokenObtainPairSerializer
 from django.utils import timezone
@@ -8,8 +6,10 @@ from fyproject.mixins import UserEditorPermissionMixin
 
 
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import viewsets
 
 
+# Customizing TokenObtainPairView inorder to add email to token
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
@@ -23,6 +23,7 @@ class UserViewSet(
 
     def perform_create(self, serializer):
         created_fields = {
+            # first time created the update fields are forced to  be none
             "created_by": (
                 self.request.user if self.request.user.is_authenticated else None
             ),
