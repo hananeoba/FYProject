@@ -1,4 +1,4 @@
-from rest_framework.routers import DefaultRouter
+"""from rest_framework.routers import DefaultRouter
 from .views import (
     CompanyViewSet,
     StructureViewSet,
@@ -18,3 +18,4 @@ router.register(r'structure-types', StructureTypeViewSet, basename='structuretyp
 router.register(r'works', WorkViewSet, basename='work')
 router.register(r'work-types', WorkTypeViewSet, basename='worktype')
 router.register(r'installations', InstallationViewSet, basename='installation')
+"""

@@ -87,7 +87,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "test123",
         "USER": "postgres",
-        "PASSWORD": "1234",
+        "PASSWORD": "#Newlife2001",
         "HOST": "localhost",
     }
 }
@@ -108,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-AUTH_USER_MODEL = "userapp.User"
+AUTH_USER_MODEL = "userapp.AdminUser"
 
 
 # Internationalization

@@ -1,21 +1,11 @@
-from .models import Event, EventType, Causes
+from .models import Event
 from rest_framework import serializers
-from basedataapp.serializer import AbstrctBaseModelSerializer
+from basedataapp.serializer import CommonSerializerMixin
 
 
-class EventSerializer(AbstrctBaseModelSerializer):
+class EventSerializer(CommonSerializerMixin):
     class Meta:
         model = Event
         fields = "__all__"
 
 
-class EventTypeSerializer(AbstrctBaseModelSerializer):
-    class Meta:
-        model = EventType
-        fields = "__all__"
-
-
-class CausesSerializer(AbstrctBaseModelSerializer):
-    class Meta:
-        model = Causes
-        fields = "__all__"

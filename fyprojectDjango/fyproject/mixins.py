@@ -1,3 +1,4 @@
+"""
 from .permissions import (
     CanModifyOrViewPermissionDataBase,
     CanModifyOrViewPermissionEvent,
@@ -15,3 +16,4 @@ class EventEditorPermissionMixin:
 
 class UserEditorPermissionMixin:
     permission_classes = [CanModifyOrViewPermissionUser]
+"""
