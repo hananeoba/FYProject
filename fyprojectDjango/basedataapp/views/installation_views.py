@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from basedataapp.models import Installation
+from basedataapp.models import Installation, Structure
 from basedataapp.serializer import Installation_Serializer
 
 from fyproject.permissions import custom_permission_generalization
@@ -29,18 +29,27 @@ def Installation_ApiOverview(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization('installation')])
 def Add_Installation(request):
-    installation = Installation_Serializer(data=request.data, context={'request': request})
+    data = request.data
+    structure_json = data.get('structure')
+    structure_id = structure_json.get('id')
 
-    # validating for already existing data
-    if Installation.objects.filter(**request.data).exists():
-        raise serializers.ValidationError('This data already exists')
+    # Validating for already existing data
+    if Structure.objects.filter(id=structure_id).exists():
+        data['structure'] = structure_id
 
-    if installation.is_valid():
-        installation.save()
-        return Response(installation.data)
+        # Checking if Installation with the given data already exists
+        if Installation.objects.filter(**data).exists():
+            raise serializers.ValidationError('This data already exists')
+
+        installation_serializer = Installation_Serializer(data=data, context={'request': request})
+
+        if installation_serializer.is_valid():
+            installation_serializer.save()
+            return Response(installation_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(installation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
-
 
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])

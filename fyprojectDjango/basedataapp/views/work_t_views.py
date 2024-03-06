@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from basedataapp.models import  Work_Type
+from basedataapp.models import  Company, Work_Type
 from basedataapp.serializer import Work_Type_Read_Serializer, Work_Type_Serializer
 
 from fyproject.permissions import custom_permission_generalization
@@ -30,18 +30,26 @@ def Work_Type_ApiOverview(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization('work_type')])
 def Add_Work_Type(request):
-    work_type = Work_Type_Serializer(data=request.data, context={'request': request})
 
+    data=request.data
+    company_json = data.get('company')
+    company_id = company_json.get('id')
     # validating for already existing data
-    if Work_Type.objects.filter(**request.data).exists():
+    if Company.objects.filter(id = company_id).exists():
+        
+        data['company'] = company_id
+        
+    if Work_Type.objects.filter(**data).exists():
         raise serializers.ValidationError('This data already exists')
-
-    if work_type.is_valid():
-        work_type.save()
-        return Response(work_type.data)
+   
+    serializer = Work_Type_Serializer(data=data, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serializers.errors, status=status.HTTP_404_NOT_FOUND)
 
+    
 
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])

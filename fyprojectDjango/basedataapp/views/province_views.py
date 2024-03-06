@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from basedataapp.models import Province
+from basedataapp.models import Province, State
 from basedataapp.serializer import Province_Serializer, Province_Read_Serializer
 
 from fyproject.permissions import custom_permission_generalization
@@ -31,18 +31,27 @@ def Province_ApiOverview(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization('province')])
 def Add_Province(request):
-    province = Province_Serializer(data=request.data, context={'request': request})
+    data = request.data
+    state_json = data.get('state')
+    state_id = state_json.get('id')
 
-    # validating for already existing data
-    if Province.objects.filter(**request.data).exists():
-        raise serializers.ValidationError('This data already exists')
+    # Validating for already existing data
+    if State.objects.filter(id=state_id).exists():
+        data['state'] = state_id
 
-    if province.is_valid():
-        province.save()
-        return Response(province.data)
+        # Checking if Province with the given data already exists
+        if Province.objects.filter(**data).exists():
+            raise serializers.ValidationError('This data already exists')
+
+        province_serializer = Province_Serializer(data=data)
+
+        if province_serializer.is_valid():
+            province_serializer.save()
+            return Response(province_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(province_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
-
 
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
