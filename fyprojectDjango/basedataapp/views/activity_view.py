@@ -1,5 +1,9 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from basedataapp.models import Activity_Nature
@@ -21,7 +25,7 @@ def Activity_Nature_ApiOverview(request):
         "Add": "/create",
         "View": "/view/pk",
         "Update": "/update/pk",
-        "Delete": "/item/pk/delete",
+        "Delete": "/delete/pk",
     }
 
     return Response(api_urls)
@@ -86,7 +90,7 @@ def View_Activity_Nature(request, pk):
     [IsAuthenticated, custom_permission_generalization("activity_nature")]
 )
 def View_Activity_Natures(request):
-    #data = , ACTIVITY_NATURE_ATTS_FILTER, Activity_Nature)
+    # data = , ACTIVITY_NATURE_ATTS_FILTER, Activity_Nature)
     data = Activity_Nature.objects.all()
     serializer = Activity_Nature_Serializer(data, many=True)
     return Response(serializer.data)
@@ -104,4 +108,3 @@ def Delete_Activity_Nature(request, pk):
 
 
 """-------------------------------------------------------------------------------------------------"""
-

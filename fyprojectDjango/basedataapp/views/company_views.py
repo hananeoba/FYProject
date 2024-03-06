@@ -117,7 +117,7 @@ def Company_ApiOverview(request):
         "Add": "/create",
         "View": "/view/pk",
         "Update": "/update/pk",
-        "Delete": "/item/pk/delete",
+        "Delete": "/delete/pk",
     }
 
     return Response(api_urls)
