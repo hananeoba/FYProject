@@ -21,12 +21,12 @@ urlpatterns = [
         name="activity-nature-overview",
     ),
     path(
-        "activity-nature/all",
+        "activity-nature/all/",
         activity_view.View_Activity_Nature,
         name="activity-nature-all",
     ),
     path(
-        "activity-nature/create",
+        "activity-nature/create/",
         activity_view.Add_Activity_Nature,
         name="activity-nature-create",
     ),
@@ -47,15 +47,15 @@ urlpatterns = [
     ),
     # Causes
     path("causes/", causes_views.Cause_ApiOverview, name="causes-overview"),
-    path("causes/create", causes_views.Add_Cause, name="causes-create"),
+    path("causes/create/", causes_views.Add_Cause, name="causes-create"),
     path("causes/update/<str:pk>", causes_views.Update_Cause, name="causes-update"),
     path("causes/delete/<str:pk>", causes_views.Delete_Cause, name="causes-delete"),
     path("causes/view/<str:pk>", causes_views.View_Cause, name="causes-view"),
-    path("causes/all", causes_views.View_Causes, name="causes-all"),
+    path("causes/all/", causes_views.View_Causes, name="causes-all"),
     # Company
     path("company/", company_views.Company_ApiOverview, name="company-overview"),
-    path("company/all", company_views.View_Company, name="company-all"),
-    path("company/create", company_views.Add_Company, name="company-create"),
+    path("company/all/", company_views.View_Companies, name="company-all"),
+    path("company/create/", company_views.Add_Company, name="company-create"),
     path(
         "company/update/<str:pk>", company_views.Update_Company, name="company-update"
     ),
@@ -67,8 +67,8 @@ urlpatterns = [
     path(
         "event-type/", event_t_views.Event_Type_ApiOverview, name="event-type-overview"
     ),
-    path("event-type/create", event_t_views.Add_Event_Type, name="event-type-create"),
-    path("event-type/all", event_t_views.View_Event_Types, name="event-type-all"),
+    path("event-type/create/", event_t_views.Add_Event_Type, name="event-type-create"),
+    path("event-type/all/", event_t_views.View_Event_Types, name="event-type-all"),
     path(
         "event-type/update/<str:pk>",
         event_t_views.Update_Event_Type,
@@ -91,12 +91,12 @@ urlpatterns = [
         name="installation-overview",
     ),
     path(
-        "installation/all",
+        "installation/all/",
         installation_views.View_Installations,
         name="installation-all",
     ),
     path(
-        "installation/create",
+        "installation/create/",
         installation_views.Add_Installation,
         name="installation-create",
     ),
@@ -117,8 +117,8 @@ urlpatterns = [
     ),
     # Province
     path("province/", province_views.Province_ApiOverview, name="province-overview"),
-    path("province/all", province_views.View_Provinces, name="province-all"),
-    path("province/create", province_views.Add_Province, name="province-create"),
+    path("province/all/", province_views.View_Provinces, name="province-all"),
+    path("province/create/", province_views.Add_Province, name="province-create"),
     path(
         "province/update/<str:pk>",
         province_views.Update_Province,
@@ -132,8 +132,8 @@ urlpatterns = [
     ),
     # State
     path("state/", state_views.State_ApiOverview, name="state-overview"),
-    path("state/all", state_views.View_States, name="state-all"),
-    path("state/create", state_views.Add_State, name="state-create"),
+    path("state/all/", state_views.View_States, name="state-all"),
+    path("state/create/", state_views.Add_State, name="state-create"),
     path("state/update/<str:pk>", state_views.Update_State, name="state-update"),
     path("state/view/<str:pk>", state_views.View_State, name="state-view"),
     path("state/delete/<str:pk>", state_views.Delete_State, name="state-delete"),
@@ -144,12 +144,12 @@ urlpatterns = [
         name="structure-type-overview",
     ),
     path(
-        "structure-type/all",
+        "structure-type/all/",
         structure_t_views.View_Structure_Types,
         name="structure-type-all",
     ),
     path(
-        "structure-type/create",
+        "structure-type/create/",
         structure_t_views.Add_Structure_Type,
         name="structure-type-create",
     ),
@@ -172,8 +172,8 @@ urlpatterns = [
     path(
         "structure/", structure_views.Structure_ApiOverview, name="structure-overview"
     ),
-    path("structure/all", structure_views.View_Structures, name="structure-all"),
-    path("structure/create", structure_views.Add_Structure, name="structure-create"),
+    path("structure/all/", structure_views.View_Structures, name="structure-all"),
+    path("structure/create/", structure_views.Add_Structure, name="structure-create"),
     path(
         "structure/update/<str:pk>",
         structure_views.Update_Structure,
@@ -189,8 +189,8 @@ urlpatterns = [
     ),
     # Work Type
     path("work-type/", work_t_views.Work_Type_ApiOverview, name="work-type-overview"),
-    path("work-type/all", work_t_views.View_Work_Types, name="work-type-all"),
-    path("work-type/create", work_t_views.Add_Work_Type, name="work-type-create"),
+    path("work-type/all/", work_t_views.View_Work_Types, name="work-type-all"),
+    path("work-type/create/", work_t_views.Add_Work_Type, name="work-type-create"),
     path(
         "work-type/update/<str:pk>",
         work_t_views.Update_Work_Type,
@@ -204,8 +204,8 @@ urlpatterns = [
     ),
     # Work
     path("work/", work_view.Work_ApiOverview, name="work-overview"),
-    path("work/all", work_view.View_Work, name="work-all"),
-    path("work/create", work_view.Add_Work, name="work-create"),
+    path("work/all/", work_view.View_Works, name="work-all"),
+    path("work/create/", work_view.Add_Work, name="work-create"),
     path("work/update/<str:pk>", work_view.Update_Work, name="work-update"),
     path("work/view/<str:pk>", work_view.View_Work, name="work-view"),
     path("work/delete/<str:pk>", work_view.Delete_Work, name="work-delete"),

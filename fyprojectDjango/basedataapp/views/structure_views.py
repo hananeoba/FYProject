@@ -50,42 +50,45 @@ def Add_Structure(request):
 
     # Validating for already existing data
     state_id = state_json.get("id")
-    province_id = province_json.get("id")
+    province_id = [province.get("id") for province in province_json]
     company_id = company_json.get("id")
-    parent_structure_id = parent_structure.get("id")
     structure_type_id = structure_type.get("id")
-
+    if parent_structure is not None:
+        parent_structure_id = parent_structure.get("id")
+    else:
+        parent_structure_id = None
+    for province in province_id:
+        if not Province.objects.filter(id=province).exists():
+            raise serializers.ValidationError("Province does not exist")
     # Checking if data is valid and exists
+
     if (
         State.objects.filter(id=state_id).exists()
-        and Province.objects.filter(id=province_id).exists()
         and Company.objects.filter(id=company_id).exists()
-        and Structure.objects.filter(id=parent_structure_id).exists()
         and Structure_Type.objects.filter(id=structure_type_id).exists()
     ):
+        if parent_structure_id is not None:
+            if not Structure.objects.filter(id=parent_structure_id).exists():
+                raise serializers.ValidationError("Parent Structure does not exist")
+            data["parent_structure"] = parent_structure_id
         data["state"] = state_id
         data["province"] = province_id
         data["company"] = company_id
-        data["parent_structure"] = parent_structure_id
         data["structure_type"] = structure_type_id
 
         # Checking if Structure with the given data already exists
-        if Structure.objects.filter(**data).exists():
+        if Structure.objects.get(data).exists():
             raise serializers.ValidationError("This data already exists")
-
-        structure_serializer = Structure_Serializer(
-            data=data, context={"request": request}
-        )
-
-        if structure_serializer.is_valid():
-            structure_serializer.save()
-            return Response(structure_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                structure_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        raise serializers.ValidationError("Invalid data")
+    structure_serializer = Structure_Serializer(data=data, context={"request": request})
+    if structure_serializer.is_valid():
+        structure_serializer.save()
+        return Response(structure_serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(
+            data=structure_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @api_view(["PUT"])
@@ -110,8 +113,8 @@ def Update_Structure(request, pk):
 def View_Structure(request, pk):
     structure = Structure.objects.get(pk=pk)
     if structure:
-        serializer = Structure_Read_Serializer(structure)
-        return Response(serializer.data)
+        serializer = Structure_Read_Serializer( structure, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -121,8 +124,10 @@ def View_Structure(request, pk):
 @permission_classes([IsAuthenticated, custom_permission_generalization("structure")])
 def View_Structures(request):
     data = Structure.objects.all()
-    serializer = Structure_Serializer(data, many=True)
-    return Response(serializer.data)
+    serializer = Structure_Read_Serializer(data= data, context={"request":request}, many=True)
+    if serializer.data.is_valid():
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["DELETE"])

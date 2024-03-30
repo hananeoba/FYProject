@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import (
         'Delete': '/item/pk/delete'"""
 urlpatterns = [
     path("overview/", UserApiOverview, name= 'user_api_overview' ),#/api/user/users
-    path("",Add_User, name= 'add_user' ),#api/user/users
+    path("create/",Add_User, name= 'add_user' ),#api/user/users
     path ("all/", View_Users, name= 'view_users'),#api/user/users/all
     path("view/<str:pk>/", View_User, name= 'view_user'),#api/user/users/view/pk
     path("update/<str:pk>/", Update_User, name= 'update_user'),#api/user/users/update/pk

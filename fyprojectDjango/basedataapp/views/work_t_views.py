@@ -52,7 +52,7 @@ def Add_Work_Type(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        return Response(serializers.errors, status=status.HTTP_404_NOT_FOUND)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["PUT"])
@@ -87,7 +87,7 @@ def View_Work_Type(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("work_type")])
 def View_Work_Types(request):
-    data = Work_Type.objects.get.all()
+    data = Work_Type.objects.all()
     serializer = Work_Type_Read_Serializer(data, many=True)
     return Response(serializer.data)
 

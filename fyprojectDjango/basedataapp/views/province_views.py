@@ -31,19 +31,18 @@ def Province_ApiOverview(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization('province')])
 def Add_Province(request):
-    data = request.data
+    data= request.data  # Create a mutable copy of the QueryDict
     state_json = data.get('state')
     state_id = state_json.get('id')
-
     # Validating for already existing data
     if State.objects.filter(id=state_id).exists():
-        data['state'] = state_id
+        data['state'] = state_id 
 
         # Checking if Province with the given data already exists
         if Province.objects.filter(**data).exists():
             raise serializers.ValidationError('This data already exists')
 
-        province_serializer = Province_Serializer(data=data)
+        province_serializer = Province_Serializer(data=data, context={"request": request})
 
         if province_serializer.is_valid():
             province_serializer.save()
@@ -51,7 +50,7 @@ def Add_Province(request):
         else:
             return Response(province_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_404_NOT_FOUND, data= 'State does not exist')
 
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
@@ -73,7 +72,7 @@ def Update_Province(request, pk):
 def View_Province(request, pk):
     province = Province.objects.get(pk=pk)
     if province:
-        serializer = Province_Read_Serializer(province)
+        serializer = Province_Read_Serializer(province, context={"request": request})
         return Response(serializer.data)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -85,7 +84,7 @@ def View_Province(request, pk):
 def View_Provinces(request):
     #paginator, data = , PROVINCE_ATTS_FILTER, Province)
     objects = Province.objects.all()
-    serializer = Province_Read_Serializer(  objects , many=True)#data
+    serializer = Province_Read_Serializer( objects , many=True, context= {"request": request})#data
     return Response(serializer.data)
 
 

@@ -32,15 +32,13 @@ def Add_Installation(request):
     data = request.data
     structure_json = data.get('structure')
     structure_id = structure_json.get('id')
-
     # Validating for already existing data
-    if Structure.objects.filter(id=structure_id).exists():
-        data['structure'] = structure_id
+    if not Structure.objects.filter(id=structure_id).exists():
+        raise serializers.ValidationError('This structure does not exist')
+    data['structure'] = structure_id
 
-        # Checking if Installation with the given data already exists
-        if Installation.objects.filter(**data).exists():
-            raise serializers.ValidationError('This data already exists')
-
+    # Checking if Installation with the given data already exists
+    if not Installation.objects.filter(**data).exists():
         installation_serializer = Installation_Serializer(data=data, context={'request': request})
 
         if installation_serializer.is_valid():
@@ -49,8 +47,9 @@ def Add_Installation(request):
         else:
             return Response(installation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        raise serializers.ValidationError('This data already exists')
 
+   
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization('installation')])

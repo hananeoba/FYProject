@@ -104,7 +104,8 @@ from fyproject.permissions import custom_permission_generalization
 from basedataapp.models import Company
 
 
-from basedataapp.serializer import Company_Serializer
+from basedataapp.serializer import Company_Read_Serializer, Company_Serializer
+from userapp.utils import is_kernel
 
 
 """-------------------------------------------COMPANY------------------------------------------------"""
@@ -126,18 +127,25 @@ def Company_ApiOverview(request):
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("company")])
+
 def Add_Company(request):
-    company = Company_Serializer(data=request.data, context={"request": request})
+    data = request.data
+    activity_nature_json = data.get("activity_nature")
+    activity_nature_id = activity_nature_json.get("id")
 
-    # validating for already existing data
-    if Company.objects.filter(**request.data).exists():
-        raise serializers.ValidationError("This data already exists")
-
-    if company.is_valid():
-        company.save()
-        return Response(company.data)
+    if activity_nature_id:
+        data["activity_nature"] = activity_nature_id
+        
+    if Company.objects.filter(code=data.get("code")).exists():
+        return Response(data="A company with this code already exists", status=status.HTTP_400_BAD_REQUEST)
+    
+    company_serializer = Company_Serializer(data=data, context={"request": request})
+    
+    if company_serializer.is_valid():
+        company_serializer.save()
+        return Response(company_serializer.data, status= status.HTTP_201_CREATED)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=company_serializer.errors)
 
 
 @api_view(["PUT"])
@@ -145,14 +153,15 @@ def Add_Company(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("company")])
 def Update_Company(request, pk):
     company = Company.objects.get(pk=pk)
-    data = Company_Serializer(
+    company_serializer = Company_Serializer(
         instance=company, data=request.data, context={"request": request}
     )
 
-    if data.is_valid():
-        data.save()
-        return Response(data.data, status=status.HTTP_200_OK)
+    if company_serializer.is_valid():
+        company_serializer.save()
+        return Response(company_serializer.data, status=status.HTTP_200_OK)
     else:
+        raise serializers.ValidationError(company_serializer.errors)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
@@ -162,7 +171,7 @@ def Update_Company(request, pk):
 def View_Company(request, pk):
     company = Company.objects.get(pk=pk)
     if company:
-        serializer = Company_Serializer(company)
+        serializer = Company_Read_Serializer(company)
         return Response(serializer.data)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -172,7 +181,17 @@ def View_Company(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("company")])
 def View_Companies(request):
-    data = Company.objects.all()
+    current_user = request.user
+    activity_nature_id = request.query_params.get("activity_nature_id",None)
+
+    if activity_nature_id:
+        data = Company.objects.filter(activity_nature=activity_nature_id)
+    else:   
+        #if is_kernel(current_user):
+        data = Company.objects.all()
+        #else:
+           # data = Company.objects.filter(id=current_user.company.id)
+    
     serializer = Company_Serializer(data, many=True)
     return Response(serializer.data)
 

@@ -36,40 +36,40 @@ def Work_ApiOverview(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("work")])
 def Add_Work(request):
     data = request.data
-
     installation_json = data.get("installation")
     parent_work = data.get("parent_work")
     work_type = data.get("work_type")
-
+   
+    if parent_work:
+        parent_work_id = parent_work.get("id")
+    else:
+        parent_work_id = None
     # Validating for already existing data
     installation_id = installation_json.get("id")
-    parent_work_id = parent_work.get("id")
     work_type_id = work_type.get("id")
+    
 
     # Checking if data is valid and exists
     if (
         Installation.objects.filter(id=installation_id).exists()
-        and Work.objects.filter(id=parent_work_id).exists()
         and Work_Type.objects.filter(id=work_type_id).exists()
-    ):
-        data["installation"] = installation_id
-        data["parent_Work"] = parent_work_id
-        data["Work_type"] = work_type_id
-
+        ):
+            data["installation"] = installation_id
+            data["work_type"] = work_type_id
         # Checking if Work with the given data already exists
-        if Work.objects.filter(**data).exists():
-            raise serializers.ValidationError("This data already exists")
+    if parent_work_id and Work.objects.filter(id=parent_work_id).exists():
+        data["parent_work"] = parent_work_id
+        
+    if Work.objects.filter(**data).exists():
+        raise serializers.ValidationError("This data already exists")
 
-        serializer = Work_Serializer(data=data, context={"request": request})
+    serializer = Work_Serializer(data=data, context={"request": request})
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["PUT"])
 @authentication_classes([JWTAuthentication])
@@ -84,7 +84,7 @@ def Update_Work(request, pk):
         data.save()
         return Response(data.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(data= data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])

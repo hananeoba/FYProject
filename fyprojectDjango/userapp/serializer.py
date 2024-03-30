@@ -1,12 +1,14 @@
+from datetime import timezone
+from gettext import translation
+from basedataapp.models import Company, Structure
+from basedataapp.serializer import  Company_Read_Serializer, Structure_Read_Serializer
 from .models import AdminUser
 
 from rest_framework import serializers
-from rest_framework.serializers import ValidationError
 
-from .models import  CustomPasswordValidator
+from .models import CustomPasswordValidator
 from django.apps import apps
-
-
+from django.db import transaction
 
 
 """
@@ -24,17 +26,39 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 """
+class CommonUserSerializerMixin:
+    def create(self, validated_data):
+        validated_data["created_by"] = self.context["request"].user
 
+        with transaction.atomic():
+            instance = super().create(validated_data)
+        return instance
 
-class UserSerializer(serializers.ModelSerializer):
-    model_class = apps.get_model(app_label='userapp',model_name= 'AdminUser')
+    def update(self, instance, validated_data):
+        validated_data["updated_by"] = self.context["request"].user
+        validated_data["updated_at"] = timezone.now()
+        with transaction.atomic():
+            instance = super().update(instance, validated_data)
+        return instance
 
-    created_by = serializers.PrimaryKeyRelatedField(
-        queryset=AdminUser.objects.all(),
+class UserSerializer(CommonUserSerializerMixin,serializers.ModelSerializer):
+    # to remove circular import
+    model_class = apps.get_model(app_label="userapp", model_name="AdminUser")
+
+    # created_by = serializers.PrimaryKeyRelatedField(
+    #     queryset=AdminUser.objects.all(),
+    #     allow_null=True,
+    # )
+    # updated_by = serializers.PrimaryKeyRelatedField(
+    #     queryset=AdminUser.objects.all(),
+    #     allow_null=True,
+    # )
+    company = serializers.PrimaryKeyRelatedField(
+        queryset=Company.objects.all(),
         allow_null=True,
     )
-    updated_by = serializers.PrimaryKeyRelatedField(
-        queryset=AdminUser.objects.all(),
+    structure = serializers.PrimaryKeyRelatedField(
+        queryset=Structure.objects.all(),
         allow_null=True,
     )
     password = serializers.CharField(
@@ -52,10 +76,12 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserReadSerializer(serializers.ModelSerializer):
+class User_Read_Serializer(serializers.ModelSerializer):
     created_by = UserSerializer()
     updated_by = UserSerializer()
-
+    company = Company_Read_Serializer()
+    structure = Structure_Read_Serializer()
+    
     class Meta:
         model = AdminUser
         fields = "__all__"
@@ -66,3 +92,6 @@ class UserReadSerializer(serializers.ModelSerializer):
                 "updated_at": {"read_only": True},
             }
         )
+
+
+# add serializers to admingroup and permission

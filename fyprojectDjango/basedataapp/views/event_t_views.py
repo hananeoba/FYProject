@@ -33,10 +33,14 @@ def Event_Type_ApiOverview(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("event_type")])
 def Add_Event_Type(request):
+    data= request.data
+    company = data.get("company")
+    company_id= company.get("id")
+    data["company"] = company_id
     event_type = Event_Type_Serializer(data=request.data, context={"request": request})
 
     # validating for already existing data
-    if Event_Type.objects.filter(**request.data).exists():
+    if Event_Type.objects.filter(**data).exists():
         raise serializers.ValidationError("This data already exists")
 
     if event_type.is_valid():

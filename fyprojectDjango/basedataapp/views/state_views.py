@@ -15,8 +15,8 @@ from rest_framework import serializers
 
 
 @api_view(["GET"])
-# @authentication_classes([JWTAuthentication])
-# @permission_classes([IsAuthenticated, custom_permission_generalization('state')])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated, custom_permission_generalization('state')])
 def State_ApiOverview(request):
     api_urls = {
         "all_items": "/all",

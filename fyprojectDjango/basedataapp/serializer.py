@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
+from django.utils import timezone
 from .models import (
     Activity_Nature,
     Causes,
@@ -14,12 +15,13 @@ from .models import (
     Work,
 )
 
-# generate_new_code(): i should get this how it works?
+from .utils import generate_new_code
 
 
 class CommonSerializerMixin:
+
     def create(self, validated_data):
-        new_code = self.generate_new_code()
+        new_code = generate_new_code(validated_data["code"])
         validated_data["code"] = new_code
         validated_data["created_by"] = self.context["request"].user
 
@@ -29,7 +31,7 @@ class CommonSerializerMixin:
 
     def update(self, instance, validated_data):
         validated_data["updated_by"] = self.context["request"].user
-
+        validated_data["updated_at"] = timezone.now()
         with transaction.atomic():
             instance = super().update(instance, validated_data)
         return instance
@@ -41,23 +43,39 @@ class Activity_Nature_Serializer(CommonSerializerMixin, serializers.ModelSeriali
         fields = "__all__"
 
 
+class Event_Type_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = Event_Type
+        fields = "__all__"
+
+
 class Causes_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
+    event_type = serializers.PrimaryKeyRelatedField(
+        queryset=Event_Type.objects.all(), allow_null=True, required=False
+    )
+    class Meta:
+        model = Causes
+        fields = "__all__"
+
+class Causes_Read_Serializer(serializers.ModelSerializer):
+    event_type = Event_Type_Serializer()
     class Meta:
         model = Causes
         fields = "__all__"
 
 
 class Company_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
-
+    activity_nature = serializers.PrimaryKeyRelatedField(queryset= Activity_Nature.objects.all(), allow_null=True, required=False )
+    class Meta:
+        model = Company
+        fields = "__all__"
+        
+class Company_Read_Serializer(serializers.ModelSerializer):
+    activity_nature = Activity_Nature_Serializer()
     class Meta:
         model = Company
         fields = "__all__"
 
-
-class Event_Type_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
-    class Meta:
-        model = Event_Type
-        fields = "__all__"
 
 
 class State_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
@@ -67,7 +85,7 @@ class State_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
 
 
 class Province_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
-    state = serializers.PrimaryKeyRelatedField(queryset=State.objects.all())
+    state = serializers.PrimaryKeyRelatedField(queryset=State.objects.all(), many=False, allow_null=True, required=False)
 
     class Meta:
         model = Province
@@ -106,7 +124,7 @@ class Structure_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
         queryset=State.objects.all(), allow_null=True, required=False
     )
     province = serializers.PrimaryKeyRelatedField(
-        queryset=Province.objects.all(), allow_null=True, required=False
+        queryset=Province.objects.all(), allow_null=True, required=False, many=True
     )
 
     class Meta:
@@ -115,14 +133,14 @@ class Structure_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
 
 
 class Structure_Read_Serializer(serializers.ModelSerializer):
-    company = Company_Serializer()
+    company = Company_Read_Serializer()
     parent_structure = Structure_Serializer()
     structure_type = Structure_Type_Serializer()
     state = State_Serializer()
-    province = Province_Serializer()
+    province = Province_Read_Serializer()
 
     class Meta:
-        model = Work
+        model = Structure
         fields = "__all__"
 
 
@@ -137,10 +155,10 @@ class Installation_Serializer(CommonSerializerMixin, serializers.ModelSerializer
 
 
 class Installation_Read_Serializer(serializers.ModelSerializer):
-    structure = "StructureSerializer()"
+    structure = Structure_Serializer()
 
     class Meta:
-        model = Work
+        model = Installation
         fields = "__all__"
 
 
@@ -150,7 +168,7 @@ class Work_Type_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Work
+        model = Work_Type
         fields = "__all__"
 
 
@@ -177,16 +195,16 @@ class Work_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Work_Type
+        model = Work
         fields = "__all__"
 
 
 class Work_Read_Serializer(serializers.ModelSerializer):
-    company = Company_Serializer()
-    work_type = Work_Type_Serializer()
+    work_type = Work_Type_Read_Serializer()
     parent_work = Work_Serializer()
-    installation = Installation_Serializer()
+    installation = Installation_Read_Serializer()
 
     class Meta:
         model = Work
         fields = "__all__"
+
