@@ -100,6 +100,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
+from basedataapp.utils import generate_new_code
 from fyproject.permissions import custom_permission_generalization
 from basedataapp.models import Company
 
@@ -135,8 +136,8 @@ def Add_Company(request):
 
     if activity_nature_id:
         data["activity_nature"] = activity_nature_id
-        
-    if Company.objects.filter(code=data.get("code")).exists():
+    code= generate_new_code(data.get("code"))    
+    if Company.objects.filter(code=code).exists():
         return Response(data="A company with this code already exists", status=status.HTTP_400_BAD_REQUEST)
     
     company_serializer = Company_Serializer(data=data, context={"request": request})
@@ -153,16 +154,19 @@ def Add_Company(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("company")])
 def Update_Company(request, pk):
     company = Company.objects.get(pk=pk)
+    data= request.data
+    activity_nature_json = data.get("activity_nature")
+    activity_nature_id = activity_nature_json.get("id")
+    data["activity_nature"] = activity_nature_id
     company_serializer = Company_Serializer(
-        instance=company, data=request.data, context={"request": request}
+        instance=company, data=data, context={"request": request}
     )
 
     if company_serializer.is_valid():
         company_serializer.save()
         return Response(company_serializer.data, status=status.HTTP_200_OK)
     else:
-        raise serializers.ValidationError(company_serializer.errors)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data= company_serializer.errors)
 
 
 @api_view(["GET"])
@@ -171,7 +175,7 @@ def Update_Company(request, pk):
 def View_Company(request, pk):
     company = Company.objects.get(pk=pk)
     if company:
-        serializer = Company_Read_Serializer(company)
+        serializer = Company_Read_Serializer(company, context={"request": request})
         return Response(serializer.data)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -192,7 +196,7 @@ def View_Companies(request):
         #else:
            # data = Company.objects.filter(id=current_user.company.id)
     
-    serializer = Company_Serializer(data, many=True)
+    serializer = Company_Serializer(data, many=True, context={"request": request})
     return Response(serializer.data)
 
 
@@ -202,7 +206,7 @@ def View_Companies(request):
 def Delete_Company(request, pk):
     company = get_object_or_404(Company, pk=pk)
     company.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="Company deleted successfully")
 
 
 """----------------------------------------------------------------------------------------------------"""

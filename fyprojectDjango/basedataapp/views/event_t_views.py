@@ -37,12 +37,14 @@ def Add_Event_Type(request):
     company = data.get("company")
     company_id= company.get("id")
     data["company"] = company_id
-    event_type = Event_Type_Serializer(data=request.data, context={"request": request})
 
-    # validating for already existing data
     if Event_Type.objects.filter(**data).exists():
         raise serializers.ValidationError("This data already exists")
 
+    event_type = Event_Type_Serializer(data=request.data, context={"request": request})
+
+    # validating for already existing data
+    
     if event_type.is_valid():
         event_type.save()
         return Response(event_type.data)
@@ -55,13 +57,18 @@ def Add_Event_Type(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("event_type")])
 def Update_Event_Type(request, pk):
     event_type = Event_Type.objects.get(pk=pk)
-    data = Event_Type_Serializer(
-        instance=event_type, data=request.data, context={"request": request}
+    data = request.data
+    company = data.get("company")
+    company_id = company.get("id")
+    data["company"] = company_id
+
+    serializer = Event_Type_Serializer(
+        instance=event_type, data=data, context={"request": request}
     )
 
-    if data.is_valid():
-        data.save()
-        return Response(data.data, status=status.HTTP_200_OK)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -93,7 +100,7 @@ def View_Event_Types(request):
 def Delete_Event_Type(request, pk):
     event_type = get_object_or_404(Event_Type, pk=pk)
     event_type.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="Item deleted")
 
 
 """---------------------------------------------------------------------------------------------------------"""

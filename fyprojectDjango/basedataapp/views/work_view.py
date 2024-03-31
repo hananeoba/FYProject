@@ -104,7 +104,7 @@ def View_Work(request, pk):
 @permission_classes([IsAuthenticated, custom_permission_generalization("work")])
 def View_Works(request):
     data = Work.objects.all()
-    serializer = Work_Read_Serializer(data, many=True)
+    serializer = Work_Read_Serializer(data,context= {"request": request},  many=True)
     return Response(serializer.data)
 
 
@@ -114,7 +114,7 @@ def View_Works(request):
 def Delete_Work(request, pk):
     work = get_object_or_404(Work, pk=pk)
     work.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="Item Deleted")
 
 
 """--------------------------------------------------------------------------------------------------"""

@@ -177,7 +177,7 @@ def View_Users(request):
         user = AdminUser.objects.filter(company=current_user.company.id)
     else:
         user = AdminUser.objects.filter(id=current_user.id)
-    serializer = UserReadSerializer(user, many=True) 
+    serializer = User_Read_Serializer(user, many=True) 
     return Response(serializer.data, status= status.HTTP_200_OK)
 
 

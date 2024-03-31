@@ -5,6 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from basedataapp.models import State
 from basedataapp.serializer import State_Serializer
 
+from basedataapp.utils import generate_new_code
 from fyproject.permissions import custom_permission_generalization
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -33,17 +34,17 @@ def State_ApiOverview(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("state")])
 def Add_State(request):
-    state = State_Serializer(data=request.data, context={"request": request})
-
+    serializer = State_Serializer(data=request.data, context={"request": request})
+    code = generate_new_code( request.data.get("code"))
     # validating for already existing data
-    if State.objects.filter(**request.data).exists():
+    if State.objects.filter(code= code).exists():
         raise serializers.ValidationError("This data already exists")
 
-    if state.is_valid():
-        state.save()
-        return Response(state.data, status=status.HTTP_201_CREATED)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
 @api_view(["PUT"])
@@ -51,15 +52,15 @@ def Add_State(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("state")])
 def Update_State(request, pk):
     state = State.objects.get(pk=pk)
-    data = State_Serializer(
+    serializer = State_Serializer(
         instance=state, data=request.data, context={"request": request}
     )
 
-    if data.is_valid():
-        data.save()
-        return Response(data.data, status=status.HTTP_200_OK)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_404_NOT_FOUND, data=serializer.errors)
 
 
 @api_view(["GET"])
@@ -71,7 +72,7 @@ def View_State(request, pk):
         serializer = State_Serializer(state)
         return Response(serializer.data)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_404_NOT_FOUND, data=serializer.errors)
 
 
 @api_view(["GET"])
@@ -90,7 +91,7 @@ def View_States(request):
 def Delete_State(request, pk):
     state = get_object_or_404(State, pk=pk)
     state.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="state deleted successfully")
 
 
 """------------------------------------------------------------------------------------------------"""

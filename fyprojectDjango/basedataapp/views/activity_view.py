@@ -38,19 +38,19 @@ def Activity_Nature_ApiOverview(request):
     [IsAuthenticated, custom_permission_generalization("activity_nature")]
 )
 def Add_Activity_Nature(request):
-    activity_nature = Activity_Nature_Serializer(
-        data=request.data, context={"request": request}
-    )
-
     # validating for already existing data
     if Activity_Nature.objects.filter(**request.data).exists():
         raise serializers.ValidationError("This data already exists")
 
-    if activity_nature.is_valid():
-        activity_nature.save()
-        return Response(activity_nature.data)
+    serializer = Activity_Nature_Serializer(
+        data=request.data, context={"request": request}
+    )
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
 @api_view(["PUT"])
@@ -60,15 +60,15 @@ def Add_Activity_Nature(request):
 )
 def Update_Activity_Nature(request, pk):
     activity_nature = Activity_Nature.objects.get(pk=pk)
-    data = Activity_Nature_Serializer(
+    serializer = Activity_Nature_Serializer(
         instance=activity_nature, data=request.data, context={"request": request}
     )
 
-    if data.is_valid():
-        data.save()
-        return Response(data.data, status=status.HTTP_200_OK)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
 @api_view(["GET"])
@@ -91,7 +91,6 @@ def View_Activity_Nature(request, pk):
     [IsAuthenticated, custom_permission_generalization("activity_nature")]
 )
 def View_Activity_Natures(request):
-    # data = , ACTIVITY_NATURE_ATTS_FILTER, Activity_Nature)
     data = Activity_Nature.objects.all()
     serializer = Activity_Nature_Serializer(data, many=True)
     return Response(serializer.data)
@@ -105,7 +104,7 @@ def View_Activity_Natures(request):
 def Delete_Activity_Nature(request, pk):
     activity_nature = get_object_or_404(Activity_Nature, pk=pk)
     activity_nature.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="Item deleted successfully")
 
 
 """-------------------------------------------------------------------------------------------------"""

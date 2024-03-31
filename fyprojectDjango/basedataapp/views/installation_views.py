@@ -40,7 +40,6 @@ def Add_Installation(request):
     # Checking if Installation with the given data already exists
     if not Installation.objects.filter(**data).exists():
         installation_serializer = Installation_Serializer(data=data, context={'request': request})
-
         if installation_serializer.is_valid():
             installation_serializer.save()
             return Response(installation_serializer.data, status=status.HTTP_201_CREATED)
@@ -55,13 +54,20 @@ def Add_Installation(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization('installation')])
 def Update_Installation(request, pk):
     installation = Installation.objects.get(pk=pk)
-    data = Installation_Serializer(instance=installation, data=request.data, context={'request': request})
+    data = request.data
+    structure_json = data.get('structure')
+    structure_id = structure_json.get('id')
+    # Validating for already existing data
+    if not Structure.objects.filter(id=structure_id).exists():
+        raise serializers.ValidationError('This structure does not exist')
+    data['structure'] = structure_id
+    serializer = Installation_Serializer(instance=installation, data=data, context={'request': request})
 
-    if data.is_valid():
-        data.save()
+    if serializer.is_valid():
+        serializer.save()
         return Response(data.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST,data= serializer.errors )
 
 
 @api_view(['GET'])
@@ -70,7 +76,7 @@ def Update_Installation(request, pk):
 def View_Installation(request, pk):
     installation = Installation.objects.get(pk=pk)
     if installation:
-        serializer = Installation_Serializer(installation)
+        serializer = Installation_Serializer(installation )
         return Response(serializer.data)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -91,5 +97,5 @@ def View_Installations(request):
 def Delete_Installation(request, pk):
     installation = get_object_or_404(Installation, pk=pk)
     installation.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data= 'Deleted')
 """-------------------------------------------------------------------------------------------------"""

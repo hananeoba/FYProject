@@ -40,20 +40,20 @@ def Add_Cause(request):
         data = request.data
         event_type = data.get("event_type")
         if event_type:
-            event_type = event_type.get("id")
-        cause = Causes_Serializer(data=data, context={"request": request})
-        if cause.is_valid():
-            # Check if the data already exists
-            if Causes.objects.filter(**request.data).exists():
+            data["event_type"] = event_type.get("id")
+        if Causes.objects.filter(**data).exists():
                 return Response(
                     {"detail": "This data already exists"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            cause.save()
-            return Response(cause.data, status=status.HTTP_201_CREATED)
+        serializer = Causes_Serializer(data=data, context={"request": request})
+        if serializer.is_valid():
+            # Check if the data already exists
+            
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            print(cause.errors)
-            return Response(cause.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         print(str(e))
 
@@ -75,7 +75,7 @@ def Update_Cause(request, pk):
         data_s.save()
         return Response(data_s.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=data_s.errors)
 
 
 @api_view(["GET"])
@@ -121,7 +121,7 @@ def View_Causes(request):
 def Delete_Cause(request, pk):
     causes = get_object_or_404(Causes, pk=pk)
     causes.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="causes deleted")
 
 
 """---------------------------------------------------------------------------------------------"""

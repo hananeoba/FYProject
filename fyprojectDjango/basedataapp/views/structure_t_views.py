@@ -9,6 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from basedataapp.models import Structure_Type
 from basedataapp.serializer import Structure_Type_Serializer
 
+from basedataapp.utils import generate_new_code
 from fyproject.permissions import custom_permission_generalization
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -39,9 +40,9 @@ def Add_Structure_Type(request):
     structure_type = Structure_Type_Serializer(
         data=request.data, context={"request": request}
     )
-
+    code= generate_new_code(request.data.get("name"))
     # validating for already existing data
-    if Structure_Type.objects.filter(**request.data).exists():
+    if Structure_Type.objects.filter(code= code).exists():
         raise serializers.ValidationError("This data already exists")
 
     if structure_type.is_valid():
@@ -102,7 +103,7 @@ def View_Structure_Types(request):
 def Delete_Structure_Type(request, pk):
     structure_type = get_object_or_404(Structure_Type, pk=pk)
     structure_type.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="structure Type deleted")
 
 
 """--------------------------------------------------------------------------------------------------"""

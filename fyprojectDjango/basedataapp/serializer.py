@@ -53,29 +53,36 @@ class Causes_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     event_type = serializers.PrimaryKeyRelatedField(
         queryset=Event_Type.objects.all(), allow_null=True, required=False
     )
+
     class Meta:
         model = Causes
         fields = "__all__"
 
-class Causes_Read_Serializer(serializers.ModelSerializer):
+
+class Causes_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     event_type = Event_Type_Serializer()
+
     class Meta:
         model = Causes
         fields = "__all__"
 
 
 class Company_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
-    activity_nature = serializers.PrimaryKeyRelatedField(queryset= Activity_Nature.objects.all(), allow_null=True, required=False )
-    class Meta:
-        model = Company
-        fields = "__all__"
-        
-class Company_Read_Serializer(serializers.ModelSerializer):
-    activity_nature = Activity_Nature_Serializer()
+    activity_nature = serializers.PrimaryKeyRelatedField(
+        queryset=Activity_Nature.objects.all(), allow_null=True, required=False
+    )
+
     class Meta:
         model = Company
         fields = "__all__"
 
+
+class Company_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
+    activity_nature = Activity_Nature_Serializer()
+
+    class Meta:
+        model = Company
+        fields = "__all__"
 
 
 class State_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
@@ -85,7 +92,9 @@ class State_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
 
 
 class Province_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
-    state = serializers.PrimaryKeyRelatedField(queryset=State.objects.all(), many=False, allow_null=True, required=False)
+    state = serializers.PrimaryKeyRelatedField(
+        queryset=State.objects.all(), many=False, allow_null=True, required=False
+    )
 
     class Meta:
         model = Province
@@ -93,7 +102,7 @@ class Province_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
 
 
 # GET
-class Province_Read_Serializer(serializers.ModelSerializer):
+class Province_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     state = State_Serializer()
 
     class Meta:
@@ -132,12 +141,12 @@ class Structure_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
         fields = "__all__"
 
 
-class Structure_Read_Serializer(serializers.ModelSerializer):
-    company = Company_Read_Serializer()
+class Structure_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
+    company = Company_Serializer()
     parent_structure = Structure_Serializer()
     structure_type = Structure_Type_Serializer()
     state = State_Serializer()
-    province = Province_Read_Serializer()
+    province = Province_Serializer(many= True)
 
     class Meta:
         model = Structure
@@ -154,7 +163,7 @@ class Installation_Serializer(CommonSerializerMixin, serializers.ModelSerializer
         fields = "__all__"
 
 
-class Installation_Read_Serializer(serializers.ModelSerializer):
+class Installation_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     structure = Structure_Serializer()
 
     class Meta:
@@ -172,7 +181,7 @@ class Work_Type_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
         fields = "__all__"
 
 
-class Work_Type_Read_Serializer(serializers.ModelSerializer):
+class Work_Type_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     company = Company_Serializer()
 
     class Meta:
@@ -199,12 +208,11 @@ class Work_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
         fields = "__all__"
 
 
-class Work_Read_Serializer(serializers.ModelSerializer):
-    work_type = Work_Type_Read_Serializer()
+class Work_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
+    work_type = Work_Type_Serializer()
     parent_work = Work_Serializer()
-    installation = Installation_Read_Serializer()
+    installation = Installation_Serializer()
 
     class Meta:
         model = Work
         fields = "__all__"
-

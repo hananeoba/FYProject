@@ -9,6 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from basedataapp.models import Company, Work_Type
 from basedataapp.serializer import Work_Type_Read_Serializer, Work_Type_Serializer
 
+from basedataapp.utils import generate_new_code
 from fyproject.permissions import custom_permission_generalization
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -43,8 +44,8 @@ def Add_Work_Type(request):
     if Company.objects.filter(id=company_id).exists():
 
         data["company"] = company_id
-
-    if Work_Type.objects.filter(**data).exists():
+    code = generate_new_code(data.get('code'))
+    if Work_Type.objects.filter(code = code).exists():
         raise serializers.ValidationError("This data already exists")
 
     serializer = Work_Type_Serializer(data=data, context={"request": request})
@@ -60,15 +61,23 @@ def Add_Work_Type(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("work_type")])
 def Update_Work_Type(request, pk):
     work_type = Work_Type.objects.get(pk=pk)
-    data = Work_Type_Serializer(
-        instance=work_type, data=request.data, context={"request": request}
+    data = request.data
+    company_json = data.get("company")
+    company_id = company_json.get("id")
+    # validating for already existing data
+    if Company.objects.filter(id=company_id).exists():
+
+        data["company"] = company_id
+
+    serializer = Work_Type_Serializer(
+        instance=work_type, data=data, context={"request": request}
     )
 
-    if data.is_valid():
-        data.save()
-        return Response(data.data, status=status.HTTP_200_OK)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
 @api_view(["GET"])
@@ -98,7 +107,7 @@ def View_Work_Types(request):
 def Delete_Work_Type(request, pk):
     work_type = get_object_or_404(Work_Type, pk=pk)
     work_type.delete()
-    return Response(status=status.HTTP_202_ACCEPTED)
+    return Response(status=status.HTTP_202_ACCEPTED, data="Item deleted")
 
 
 """------------------------------------------------------------------------------------------------"""
