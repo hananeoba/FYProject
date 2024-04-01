@@ -1,7 +1,7 @@
 from datetime import timezone
 from gettext import translation
 from basedataapp.models import Company, Structure
-from basedataapp.serializer import  Company_Read_Serializer, Structure_Read_Serializer
+from basedataapp.serializer import Company_Read_Serializer, Structure_Read_Serializer
 from .models import AdminUser
 
 from rest_framework import serializers
@@ -9,6 +9,9 @@ from rest_framework import serializers
 from .models import CustomPasswordValidator
 from django.apps import apps
 from django.db import transaction
+from django.contrib.auth.models import Permission
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 """
@@ -26,6 +29,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 """
+
+
 class CommonUserSerializerMixin:
     def create(self, validated_data):
         validated_data["created_by"] = self.context["request"].user
@@ -41,7 +46,8 @@ class CommonUserSerializerMixin:
             instance = super().update(instance, validated_data)
         return instance
 
-class UserSerializer(CommonUserSerializerMixin,serializers.ModelSerializer):
+
+class UserSerializer(CommonUserSerializerMixin, serializers.ModelSerializer):
     # to remove circular import
     model_class = apps.get_model(app_label="userapp", model_name="AdminUser")
 
@@ -81,7 +87,7 @@ class User_Read_Serializer(serializers.ModelSerializer):
     updated_by = UserSerializer()
     company = Company_Read_Serializer()
     structure = Structure_Read_Serializer()
-    
+
     class Meta:
         model = AdminUser
         fields = "__all__"
@@ -95,3 +101,26 @@ class User_Read_Serializer(serializers.ModelSerializer):
 
 
 # add serializers to admingroup and permission
+class AdminGroupSerializer(CommonUserSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = apps.get_model(app_label="userapp", model_name="AdminGroup")
+        fields = "__all__"
+
+
+class AdminPermissionSerializer(CommonUserSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = "__all__"
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token["name"] = user.user_name
+        token["company"] = user.company
+        token["structure"] = user.structure
+        # ...
+        return token

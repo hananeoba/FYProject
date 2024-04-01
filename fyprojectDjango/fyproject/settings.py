@@ -30,8 +30,9 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     "localhost",
     "127.0.0.1",
-    "192.168.1.4"
-]
+    "192.168.1.4",
+    "ef5c-41-109-177-118.ngrok-free.app"
+    ]
 
 
 # Application definition
@@ -144,6 +145,11 @@ REST_FRAMEWORK = {
     )
 }
 SIMPLE_JWT = {
+  # It will work instead of the default serializer(TokenObtainPairSerializer).
+  
+  # ...
+}
+SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),  # should be changed
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # should be changed
     "ROTATE_REFRESH_TOKENS": True,
@@ -168,7 +174,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "userapp.serializer.MyTokenObtainPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
     "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",

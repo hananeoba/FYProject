@@ -52,6 +52,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -188,3 +189,10 @@ def Delete_User(request, pk):
     user = get_object_or_404(user, pk=pk)
     user.delete()
     return Response(status=status.HTTP_202_ACCEPTED)
+
+@api_view(["POST"])
+@authentication_classes([JWTAuthentication])
+def Logout(request):
+    refresh_token = RefreshToken(request.data.get("refresh"))
+    refresh_token.blacklist()
+    return Response(status=status.HTTP_200_OK)
