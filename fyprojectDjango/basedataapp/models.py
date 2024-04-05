@@ -46,7 +46,6 @@ class Company(AbstrctBaseModel):
     activity_nature = models.ForeignKey(
         Activity_Nature, on_delete=models.PROTECT, null=True, blank=True
     )
-
     class Meta:
         # managed = True
         db_table = 'basedata_schema"."company'

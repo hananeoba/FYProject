@@ -104,7 +104,6 @@ class Province_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
 # GET
 class Province_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     state = State_Serializer()
-
     class Meta:
         model = Province
         fields = "__all__"

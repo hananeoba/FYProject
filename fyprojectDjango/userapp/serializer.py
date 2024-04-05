@@ -1,7 +1,7 @@
 from datetime import timezone
 from gettext import translation
 from basedataapp.models import Company, Structure
-from basedataapp.serializer import Company_Read_Serializer, Structure_Read_Serializer
+from basedataapp.serializer import Company_Serializer, Structure_Serializer
 from .models import AdminUser
 
 from rest_framework import serializers
@@ -78,15 +78,17 @@ class UserSerializer(CommonUserSerializerMixin, serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
+        validated_data["created_by"] = self.context["request"].user
         user = AdminUser.objects.create_user(**validated_data)
+
         return user
 
 
 class User_Read_Serializer(serializers.ModelSerializer):
     created_by = UserSerializer()
     updated_by = UserSerializer()
-    company = Company_Read_Serializer()
-    structure = Structure_Read_Serializer()
+    company = Company_Serializer()
+    structure = Structure_Serializer()
 
     class Meta:
         model = AdminUser
@@ -102,6 +104,10 @@ class User_Read_Serializer(serializers.ModelSerializer):
 
 # add serializers to admingroup and permission
 class AdminGroupSerializer(CommonUserSerializerMixin, serializers.ModelSerializer):
+    Permission = serializers.PrimaryKeyRelatedField(
+        queryset=Permission.objects.all(), many=True
+    )
+
     class Meta:
         model = apps.get_model(app_label="userapp", model_name="AdminGroup")
         fields = "__all__"
@@ -120,7 +126,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Add custom claims
         token["name"] = user.user_name
-        token["company"] = user.company
-        token["structure"] = user.structure
-        # ...
+        if user.company:
+            token["company"] = user.company.code
+        else:
+            token["company"] = None
+        if user.structure:
+            token["structure"] = user.structure.code
+        else:
+            token["structure"] = None
         return token

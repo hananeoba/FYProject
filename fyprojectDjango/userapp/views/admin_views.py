@@ -58,8 +58,8 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 
 from userapp.utils import is_kernel
-from .models import AdminUser
-from .serializer import UserSerializer, User_Read_Serializer
+from ..models import AdminUser
+from ..serializer import UserSerializer, User_Read_Serializer
 from fyproject.permissions import custom_permission_generalization
 from rest_framework import serializers
 from django.core.paginator import Paginator
@@ -70,11 +70,11 @@ from django.core.paginator import Paginator
 @permission_classes([custom_permission_generalization('adminuser')])
 def UserApiOverview(request):
     api_urls = {
-        "all_items": "/all",
-        "Add": "/",
-        "View": "/view/pk",
-        "Update": "/update/pk",
-        "Delete": "/item/pk/delete",
+        "all_items": "all/",
+        "Add": "create/",
+        "View": "view/pk",
+        "Update": "update/pk",
+        "Delete": "delete/pk",
     }
 
     return Response(api_urls)
@@ -177,7 +177,7 @@ def View_Users(request):
     elif current_user.company is not None:
         user = AdminUser.objects.filter(company=current_user.company.id)
     else:
-        user = AdminUser.objects.filter(id=current_user.id)
+        user = AdminUser.objects.all()
     serializer = User_Read_Serializer(user, many=True) 
     return Response(serializer.data, status= status.HTTP_200_OK)
 
