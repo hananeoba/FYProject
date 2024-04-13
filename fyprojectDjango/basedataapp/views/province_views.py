@@ -92,8 +92,17 @@ def View_Province(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization('province')])
 def View_Provinces(request):
-    objects = Province.objects.all()
-    serializer = Province_Read_Serializer( objects , many=True, context= {"request": request})#data
+    current_user = request.user
+    state_id = request.query_params.get("state_id",None)
+
+    if state_id:
+        data = Province.objects.filter(state=state_id)
+    else:   
+        #if is_kernel(current_user):
+        data = Province.objects.all()
+        #else:
+           # data = Company.objects.filter(id=current_user.company.id)
+    serializer = Province_Read_Serializer( data , many=True, context= {"request": request})#data
     return Response(serializer.data)
 
 

@@ -103,6 +103,12 @@ def View_Work(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("work")])
 def View_Works(request):
+    current_user = request.user
+    Installation_id = request.query_params.get("Installation_id",None)
+    if Installation_id:
+        data = Work.objects.filter(Installation=Installation_id)
+    else:   
+        data = Work.objects.all()
     data = Work.objects.all()
     serializer = Work_Read_Serializer(data,context= {"request": request},  many=True)
     return Response(serializer.data)

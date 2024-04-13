@@ -33,6 +33,8 @@ class CustomPasswordValidator:  # BaseValidator:
 
 
 def is_kernel(user):
+    if (user.is_superuser):
+        return True
     if (user.company is None):
         return False
     return (user.company.code.lower() == "root" and user.is_superuser)

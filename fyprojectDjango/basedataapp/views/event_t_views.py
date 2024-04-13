@@ -77,6 +77,7 @@ def Update_Event_Type(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("event_type")])
 def View_Event_Type(request, pk):
+    
     event_type = Event_Type.objects.get(pk=pk)
     if event_type:
         serializer = Event_Type_Serializer(event_type)
@@ -89,7 +90,16 @@ def View_Event_Type(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("event_type")])
 def View_Event_Types(request):
-    data = Event_Type.objects.all()
+    current_user = request.user
+    company_id = request.query_params.get("company_id",None)
+
+    if company_id:
+        data = Event_Type.objects.filter(company=company_id)
+    else:   
+        #if is_kernel(current_user):
+        data = Event_Type.objects.all()
+        #else:
+           # data = Company.objects.filter(id=current_user.company.id)
     serializer = Event_Type_Serializer(data, many=True)
     return Response(serializer.data)
 

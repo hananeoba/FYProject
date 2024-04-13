@@ -86,6 +86,12 @@ def View_Installation(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization('installation')])
 def View_Installations(request):
+    current_user = request.user
+    structure_id = request.query_params.get("structure_id",None)
+    if structure_id:
+        data = Installation.objects.filter(structure=structure_id)
+    else:
+        data = Installation.objects.all()
     data = Installation.objects.all()
     serializer = Installation_Serializer(data, many=True)
     return Response(serializer.data)

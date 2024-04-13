@@ -163,9 +163,19 @@ def View_Structure(request, pk):
 @permission_classes([IsAuthenticated, custom_permission_generalization("structure")])
 def View_Structures(request):
     if request.method == "GET":
+        current_user = request.user
+    company_id = request.query_params.get("company_id",None)
+
+    if company_id:
+        data = Structure.objects.filter(company=company_id)
+    else:   
+        #if is_kernel(current_user):
         data = Structure.objects.all()
-        serializer = Structure_Read_Serializer(data,context= {"request": request}, many=True)
-        return Response(serializer.data , status=status.HTTP_200_OK)
+        #else:
+           # data = Company.objects.filter(id=current_user.company.id)
+
+    serializer = Structure_Read_Serializer(data,context= {"request": request}, many=True)
+    return Response(serializer.data , status=status.HTTP_200_OK)
 
 @api_view(["DELETE"])
 @authentication_classes([JWTAuthentication])

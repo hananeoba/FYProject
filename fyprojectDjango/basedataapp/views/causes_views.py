@@ -94,7 +94,7 @@ def View_Cause(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("causes")])
 def View_Causes(request):
-    try:
+    
         current_user = request.user
         event_type = request.query_params.get("event_type", None)
         if event_type:
@@ -102,17 +102,19 @@ def View_Causes(request):
         else:
             if is_kernel(current_user):
                 causes = Causes.objects.all()
-            else:
-                causes = Causes.objects.filter(
+            elif current_user.company:
+                     causes = Causes.objects.filter(
                     event_type__company__id=current_user.company.id
-                )
+                    )
+            else:    
+                causes = Causes.objects.all()
         if causes:
             serializer = Causes_Serializer(causes, many=True)
             return Response(serializer.data)
         else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        print(str(e))
+            return Response(status=status.HTTP_404_NOT_FOUND, data="No causes found")
+            """except Exception as e:
+        print(str(e))"""
 
 
 @api_view(["DELETE"])

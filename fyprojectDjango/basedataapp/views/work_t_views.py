@@ -96,6 +96,16 @@ def View_Work_Type(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("work_type")])
 def View_Work_Types(request):
+    current_user = request.user
+    company_id = request.query_params.get("company_id",None)
+
+    if company_id:
+        data =Work_Type.objects.filter(company=company_id)
+    else:   
+        #if is_kernel(current_user):
+        data =Work_Type.objects.all()
+        #else:
+           # data = Company.objects.filter(id=current_user.company.id)
     data = Work_Type.objects.all()
     serializer = Work_Type_Read_Serializer(data, many=True)
     return Response(serializer.data)

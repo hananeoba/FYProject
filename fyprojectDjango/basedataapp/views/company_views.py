@@ -191,10 +191,10 @@ def View_Companies(request):
     if activity_nature_id:
         data = Company.objects.filter(activity_nature=activity_nature_id)
     else:   
-        #if is_kernel(current_user):
-        data = Company.objects.all()
-        #else:
-           # data = Company.objects.filter(id=current_user.company.id)
+        if is_kernel(current_user):
+            data = Company.objects.all()
+        else:
+           data = Company.objects.filter(id=current_user.company.id)
     
     serializer = Company_Serializer(data, many=True, context={"request": request})
     return Response(serializer.data)

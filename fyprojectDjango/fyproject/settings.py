@@ -30,7 +30,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.2",
     "192.168.1.7",
-    "5d9e-105-103-174-82.ngrok-free.app",
+    "adab-41-109-217-50.ngrok-free.app",
     "localhost:8081"
     ]
 
