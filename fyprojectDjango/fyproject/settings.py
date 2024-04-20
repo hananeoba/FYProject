@@ -27,6 +27,7 @@ SECRET_KEY = "django-insecure-3li#+$y9@7_9#*je6u04g_y9()614t&ah=dossra-&=5w5jyp!
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    '*',
     "localhost",
     "127.0.0.2",
     "192.168.1.7",
@@ -145,9 +146,8 @@ REST_FRAMEWORK = {
     )
 }
 SIMPLE_JWT = {
-  # It will work instead of the default serializer(TokenObtainPairSerializer).
-  
-  # ...
+    # It will work instead of the default serializer(TokenObtainPairSerializer).
+    # ...
 }
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),  # should be changed
@@ -180,7 +180,6 @@ SIMPLE_JWT = {
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
-
 }
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
@@ -189,8 +188,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
     "http://localhost:8080",
-    "http://localhost:8081",  
-    "https://example.com", 
-    "exp://192.168.1.4:8081" , 
+    "http://localhost:8081",
+    "https://example.com",
+    "exp://192.168.1.4:8081",
 ]
-

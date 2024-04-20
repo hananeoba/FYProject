@@ -65,24 +65,24 @@ urlpatterns = [
     ),
     # Event Type
     path(
-        "event-type/", event_t_views.Event_Type_ApiOverview, name="event-type-overview"
+        "event_type/", event_t_views.Event_Type_ApiOverview, name="event_type-overview"
     ),
-    path("event-type/create/", event_t_views.Add_Event_Type, name="event-type-create"),
-    path("event-type/all/", event_t_views.View_Event_Types, name="event-type-all"),
+    path("event_type/create/", event_t_views.Add_Event_Type, name="event_type-create"),
+    path("event_type/all/", event_t_views.View_Event_Types, name="event_type-all"),
     path(
-        "event-type/update/<str:pk>",
+        "event_type/update/<str:pk>",
         event_t_views.Update_Event_Type,
-        name="event-type-update",
+        name="event_type-update",
     ),
     path(
-        "event-type/view/<str:pk>",
+        "event_type/view/<str:pk>",
         event_t_views.View_Event_Type,
-        name="event-type-view",
+        name="event_type-view",
     ),
     path(
-        "event-type/delete/<str:pk>",
+        "event_type/delete/<str:pk>",
         event_t_views.Delete_Event_Type,
-        name="event-type-delete",
+        name="event_type-delete",
     ),
     # Installation
     path(

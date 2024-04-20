@@ -42,7 +42,6 @@ def Event_ApiOverview(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("event")])
 def Add_Event(request):
     data = request.data
-
     work_json = data.get("work")
     event_type = data.get("event_type")
     causes_json = data.get("event_causes")
