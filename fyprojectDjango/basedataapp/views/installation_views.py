@@ -92,7 +92,6 @@ def View_Installations(request):
         data = Installation.objects.filter(structure=structure_id)
     else:
         data = Installation.objects.all()
-    data = Installation.objects.all()
     serializer = Installation_Serializer(data, many=True)
     return Response(serializer.data)
 

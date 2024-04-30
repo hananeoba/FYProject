@@ -104,14 +104,13 @@ def View_Work(request, pk):
 @permission_classes([IsAuthenticated, custom_permission_generalization("work")])
 def View_Works(request):
     current_user = request.user
-    Installation_id = request.query_params.get("Installation_id",None)
+    Installation_id = request.query_params.get("installation_id",None)
     if Installation_id:
-        data = Work.objects.filter(Installation=Installation_id)
+        data = Work.objects.filter(installation=Installation_id)
     else:   
         data = Work.objects.all()
-    data = Work.objects.all()
     serializer = Work_Read_Serializer(data,context= {"request": request},  many=True)
-    return Response(serializer.data)
+    return Response(serializer.data, status= status.HTTP_200_OK)
 
 
 @api_view(["DELETE"])

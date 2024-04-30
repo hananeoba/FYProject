@@ -63,11 +63,12 @@ from ..serializer import UserSerializer, User_Read_Serializer
 from fyproject.permissions import custom_permission_generalization
 from rest_framework import serializers
 from django.core.paginator import Paginator
+from rest_framework.authtoken.models import Token
 
 
 @api_view(["GET"])
 @authentication_classes([JWTAuthentication])
-@permission_classes([custom_permission_generalization('adminuser')])
+@permission_classes([custom_permission_generalization("adminuser")])
 def UserApiOverview(request):
     api_urls = {
         "all_items": "all/",
@@ -122,7 +123,7 @@ def Add_User(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("adminuser")])
 def Update_User(request, pk):
-    User = get_object_or_404(User, pk=pk)
+    User = get_object_or_404(AdminUser, id=pk)
     curret_user = request.user
     data = request.data
     company_json = data.get("company")
@@ -152,7 +153,7 @@ def Update_User(request, pk):
         user_serializer.save()
         return Response(user_serializer.data, status=status.HTTP_202_ACCEPTED)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=user_serializer.errors   )
 
 
 @api_view(["GET"])
@@ -164,7 +165,7 @@ def View_User(request, pk):
         serializer = User_Read_Serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND, data= user.errors)
+        return Response(status=status.HTTP_404_NOT_FOUND, data=user.errors)
 
 
 @api_view(["GET"])
@@ -174,12 +175,13 @@ def View_Users(request):
     current_user = request.user
     if is_kernel(current_user):
         user = AdminUser.objects.all()
-    elif current_user.company is not None:
-        user = AdminUser.objects.filter(company=current_user.company.id)
+    elif current_user.structure is not None:
+        # sturctures = recurs(structureid)
+        user = AdminUser.objects.filter(stucture__in=current_user.company.id)
     else:
-        user = AdminUser.objects.all()
-    serializer = User_Read_Serializer(user, many=True) 
-    return Response(serializer.data, status= status.HTTP_200_OK)
+        pass
+    serializer = User_Read_Serializer(user, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["DELETE"])
@@ -190,9 +192,37 @@ def Delete_User(request, pk):
     user.delete()
     return Response(status=status.HTTP_202_ACCEPTED)
 
+
 @api_view(["POST"])
 @authentication_classes([JWTAuthentication])
 def Logout(request):
     refresh_token = RefreshToken(request.data.get("refresh"))
     refresh_token.blacklist()
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(["PATCH"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated, custom_permission_generalization("adminuser")])
+def Update_Password_User(request):
+    user = get_object_or_404(AdminUser, id=request.user.id)
+    old = request.data.get("password")
+    new_password = request.data.get("new_password")
+    confirm = request.data.get("confirm_password")
+    if not user.check_password(old):
+        return Response(
+            {"error": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST
+        )
+    if new_password == confirm and new_password is not None:
+        # Update the user's password
+        user.set_password(new_password)
+        user.is_password_reset = True;
+        user.save()
+        # Invalidate existing tokens
+        return Response(
+            {"message": "Password updated successfully"}, status=status.HTTP_200_OK
+        )
+    else:
+        return Response(
+            {"error": "No password provided"}, status=status.HTTP_400_BAD_REQUEST
+        )

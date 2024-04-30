@@ -96,7 +96,7 @@ def View_Cause(request, pk):
 def View_Causes(request):
     
         current_user = request.user
-        event_type = request.query_params.get("event_type", None)
+        event_type = request.query_params.get("event_type_id", None)
         if event_type:
             causes = Causes.objects.filter(event_type=event_type)
         else:
@@ -110,9 +110,10 @@ def View_Causes(request):
                 causes = Causes.objects.all()
         if causes:
             serializer = Causes_Serializer(causes, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status = status.HTTP_200_OK)
         else:
-            return Response(status=status.HTTP_404_NOT_FOUND, data="No causes found")
+            return Response(status=status.HTTP_404_NOT_FOUND, data=[])
+        
             """except Exception as e:
         print(str(e))"""
 

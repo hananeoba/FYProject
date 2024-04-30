@@ -1,4 +1,4 @@
-from datetime import timezone
+
 from gettext import translation
 from basedataapp.models import Company, Structure
 from basedataapp.serializer import Company_Serializer, Structure_Serializer
@@ -10,6 +10,7 @@ from .models import CustomPasswordValidator
 from django.apps import apps
 from django.db import transaction
 from django.contrib.auth.models import Permission
+from django.utils import timezone
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 

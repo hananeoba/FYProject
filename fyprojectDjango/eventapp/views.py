@@ -7,11 +7,13 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from basedataapp.models import Causes, Work, Event_Type
-from basedataapp.utils import generate_new_code
+from basedataapp.utils import generate_Event_code
 
 from django.db.models import Count
 from django.db.models.functions import TruncWeek, TruncMonth, TruncDay, TruncYear
 from datetime import datetime, timedelta
+
+from userapp.utils import is_kernel
 
 from .models import Event
 from .serializer import Event_Serializer, Event_Read_Serializer
@@ -41,10 +43,17 @@ def Event_ApiOverview(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("event")])
 def Add_Event(request):
+
     data = request.data
+    user = request.user
+    structure = user.structure
+    company = user.company
+    year= data.get("start_date")[:4]
+    count = Event.objects.all().count()+1
     work_json = data.get("work")
     event_type = data.get("event_type")
     causes_json = data.get("event_causes")
+
     # Validating for already existing data
     if work_json:
         work_id = work_json.get("id")
@@ -71,9 +80,15 @@ def Add_Event(request):
 
     # Checking if data is valid and exists
     # Checking if event with the given data already exists
-    code = generate_new_code(data.get("code"))
+    code = generate_Event_code(year= year, company=company, struc=structure, count=count )
+    label = code
     if Event.objects.filter(code=code).exists():
         raise serializers.ValidationError("This data already exists")
+    print(code, "this is the code ")
+    print (label, "this is the label")
+    data["code"]= code
+    data["label"]= label
+
     serializer = Event_Serializer(data=data, context={"request": request})
     if serializer.is_valid():
         serializer.save()
@@ -86,16 +101,20 @@ def Add_Event(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("event")])
 def Update_Event(request, pk):
-    event = event.objects.get(pk=pk)
+    event = Event.objects.get(pk=pk)
+    data = request.data
+    data["code"]= event.code
+    data["label"]= event.label
+
     data = Event_Serializer(
-        instance=event, data=request.data, context={"request": request}
+        instance=event, data=data, context={"request": request}
     )
 
     if data.is_valid():
         data.save()
         return Response(data.data, status=status.HTTP_200_OK)
     else:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=data.errors)
 
 
 @api_view(["GET"])
@@ -114,13 +133,20 @@ def View_Event(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("event")])
 def View_Events(request):
-    selectedInstallation_json = request.query_params.get("selectedInstallation")
+    user = request.user
+    selectedInstallation_json = request.query_params.get("installation_id")
     if selectedInstallation_json:
         selected_installation_id = selectedInstallation_json.get("id")
+        
         work = Work.objects.filter(installation=selected_installation_id)
         data = Event.objects.filter(work=work)
     else:
-        data = Event.objects.all()
+        if is_kernel(user):
+            data = Event.objects.all()
+        else:
+
+            data = Event.objects.filter(work__installation__structure=user.structure)
+        # data = Event.objects.all();
     serializer = Event_Read_Serializer(data, many=True)
     return Response(serializer.data)
 
@@ -171,8 +197,8 @@ def events_this_week(request):
 def events_this_year_by_month(request):
     # Define the start and end dates for the current year
     today = datetime.now().date()
-    start_of_year = today.replace(month=1, day=1)
-    end_of_year = today.replace(month=12, day=31)
+    start_of_year = request.data.start_date
+    end_of_year = request.data.end_date
 
     # Generate a list of months for the current year
     months_this_year = [start_of_year.replace(month=i) for i in range(1, 13)]
@@ -217,3 +243,87 @@ def Delete_Event(request, pk):
 
 
 """--------------------------------------------------------------------------------------------------"""
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, custom_permission_generalization("event")])
+def events_by_date_range(request):
+    # Get start and end date parameters from query string
+    start_date_str = request.query_params.get('start_date')
+    end_date_str = request.query_params.get('end_date')
+    structures= request.data.get("structure")
+
+    # Parse start and end dates from query parameters
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return Response({"error": "Invalid date format. Please provide dates in YYYY-MM-DD format."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Query to get the count of events for each day within the provided date range
+    events_by_date_range = (
+        Event.objects.filter(start_date__date__range=[start_date, end_date], work__installation__structure__in=structures)
+        .annotate(day=TruncDay("start_date"))
+        .values("day")
+        .annotate(count=Count("id"))
+    )
+
+    # Create a dictionary to hold the counts for each day
+    events_per_day = {item["day"].date(): item["count"] for item in events_by_date_range}
+
+    # Prepare the response data
+    response_data = [
+        {"day": date.strftime("%Y-%m-%d"), "count": count}
+        for date, count in events_per_day.items()
+    ]
+
+    return Response(response_data, status=status.HTTP_200_OK)
+"""--------------------------------------------------------------------------------"""
+@api_view(["GET"])
+def get_events(request):
+    user = request.user
+    if is_kernel(user):
+        events= Event.objects.all()
+        serializer = Event_Read_Serializer(events, many= True)
+        return Response(serializer.data, status= status.HTTP_200_OK)
+    elif user.structure is None:
+        events = Event.objects.none()  # Return an empty queryset if user has no structure
+        serializer = Event_Read_Serializer(events, many= True)
+        return Response(serializer.data, status= status.HTTP_200_OK)
+
+    # Initialize a list to store events from all parent structures
+    events = []
+
+    # Start from the current user's structure
+    current_structure = user.structure
+
+    # Traverse the hierarchy until there's no parent structure left
+    while current_structure is not None:
+        # Retrieve events for the current structure
+        current_events = Event.objects.filter(work__installation__structure=current_structure)
+        events.extend(current_events)
+
+        # Move to the parent structure
+        current_structure = current_structure.parent_structure
+
+    serializer = Event_Read_Serializer(events, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+"""
+current_user = request.user
+users_list = []
+current_Structure = current_user.structure
+if current8structure is not none:
+    while current_structure.attached_parent_structure:
+        current_user.extend(getusersfroòstructure(current_structure))
+        current_structure =current_structure.parent_structure
+    else:
+        user_list.extend(getusersholding())
+
+notificqtion.users = [user.id for user in users_list]
+notification.save()
+signal(notificqtion)
+
+users_mail = [user.email for user in users_list]
+email from to list object=$ message un incindent est apprru dans structere ouvrqge dqte event type
+"""

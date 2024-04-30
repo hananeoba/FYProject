@@ -6,6 +6,8 @@ from userapp.views.admin_views import (
     View_User,
     Delete_User,
     View_Users,
+    Update_Password_User
+    
 )
 from django.urls import path
 
@@ -26,7 +28,8 @@ urlpatterns = [
     path("create/", Add_User, name="add_user"),  # api/user/
     path("all/", View_Users, name="view_users"),  # api/user/all
     path("view/<str:pk>", View_User, name="view_user"),  # api/user/view/pk
-    path("update/<str:pk>", Update_User, name="update_user"),  # api/user/update/pk
+    path("update/<int:pk>", Update_User, name="update_user"),  # api/user/update/pk
+    path("update/password/", Update_Password_User, name="update_password_user"),  # api/user/update/pk
     path(
         "delete/<str:pk>", Delete_User, name="delete_user"
     ),  # api/user/item/pk/delete

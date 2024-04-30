@@ -203,6 +203,7 @@ def custom_permission_generalization(model_name):
             'POST': 'add_{}',
             'PUT': 'change_{}',
             'DELETE': 'delete_{}',
+            'PATCH': 'change_{}',
         }
 
         def has_permission(self, request, view):
