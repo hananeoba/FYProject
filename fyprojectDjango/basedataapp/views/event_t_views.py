@@ -47,7 +47,7 @@ def Add_Event_Type(request):
     
     if event_type.is_valid():
         event_type.save()
-        return Response(event_type.data)
+        return Response(event_type.data, status= status.HTTP_201_CREATED)
     else:
         return Response(status=status.HTTP_404_NOT_FOUND)
 

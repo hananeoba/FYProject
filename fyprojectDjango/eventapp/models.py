@@ -9,7 +9,7 @@ from django.utils import timezone
 class Event(AbstrctBaseModel):
     work = models.ForeignKey(Work, on_delete=models.PROTECT)
     start_date = models.DateTimeField( default=timezone.now)
-    event_description = models.TextField(default="No Description")
+    event_description = models.TextField(default="No Description", blank=True, null=True)
     event_location = models.CharField(max_length=255, blank=True, null=True)
     event_type = models.ForeignKey("basedataapp.Event_Type", on_delete=models.PROTECT)
     event_status = models.CharField(max_length=25, default="pending")
@@ -17,6 +17,8 @@ class Event(AbstrctBaseModel):
     event_causes = models.ManyToManyField(
         "basedataapp.Causes",
         related_name="event_causes",
+        null=True,
+        blank=True
     )
 
     class Meta:

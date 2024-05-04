@@ -127,12 +127,13 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Add custom claims
         token["name"] = user.user_name
+        
         if user.company:
-            token["company"] = user.company.label
+            token["company"] = user.company.id
         else:
             token["company"] = None
         if user.structure:
-            token["structure"] = user.structure.label
+            token["structure"] = user.structure.id
         else:
             token["structure"] = None
         return token

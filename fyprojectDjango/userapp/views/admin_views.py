@@ -56,7 +56,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-
+from django.contrib.auth.hashers import make_password
 from userapp.utils import is_kernel
 from ..models import AdminUser
 from ..serializer import UserSerializer, User_Read_Serializer
@@ -209,6 +209,7 @@ def Update_Password_User(request):
     old = request.data.get("password")
     new_password = request.data.get("new_password")
     confirm = request.data.get("confirm_password")
+    
     if not user.check_password(old):
         return Response(
             {"error": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST

@@ -187,6 +187,16 @@ urlpatterns = [
         structure_views.Delete_Structure,
         name="structure-delete",
     ),
+    path(
+        "structure/parent_structures/all/",
+        structure_views.structure_get_parents,
+        name="parent-structure-all",
+    ),
+    path(
+        "structure/child_structures/all/",
+        structure_views.structure_get_children,
+        name="child-structure-all",
+    ),
     # Work Type
     path("work-type/", work_t_views.Work_Type_ApiOverview, name="work-type-overview"),
     path("work-type/all/", work_t_views.View_Work_Types, name="work-type-all"),

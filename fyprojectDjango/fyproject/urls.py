@@ -19,9 +19,11 @@ from django.contrib import admin
 from django.urls import path, include
 
 
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/basedata/", include("basedataapp.urls")),
     path("api/", include("userapp.urls")),
     path("api/events/", include("eventapp.urls")),
+     
 ]

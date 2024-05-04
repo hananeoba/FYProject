@@ -16,7 +16,7 @@ from basedataapp.models import (
 )
 from basedataapp.serializer import Structure_Serializer, Structure_Read_Serializer
 
-from basedataapp.utils import generate_new_code
+from basedataapp.utils import get_children_structures, get_parent_structures, generate_new_code
 from fyproject.permissions import custom_permission_generalization
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -187,3 +187,20 @@ def Delete_Structure(request, pk):
 
 
 """-----------------------------------------------------------------------------------------------------"""
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated, custom_permission_generalization("structure")])
+def structure_get_parents(request):
+    id= request.query_params.get("structure_id", None)
+    structure =  get_parent_structures(id)
+    serializer = Structure_Read_Serializer(structure, many=True)
+    return Response(serializer.data , status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated, custom_permission_generalization("structure")])
+def structure_get_children(request):
+    id= request.query_params.get("structure_id", None)
+    structure =  get_children_structures(id)
+    serializer = Structure_Read_Serializer(structure, many=True)
+    return Response(serializer.data , status=status.HTTP_200_OK)
