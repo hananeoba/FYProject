@@ -210,7 +210,7 @@ class Work_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
 class Work_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     work_type = Work_Type_Serializer()
     parent_work = Work_Serializer()
-    installation = Installation_Serializer()
+    installation = Installation_Read_Serializer()
 
     class Meta:
         model = Work

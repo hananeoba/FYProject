@@ -22,11 +22,5 @@ def create_notification(sender, instance, created, **kwargs):
             "event": instance.id,
             "users": users_id,
         }
-        #Notification.objects.create(**notification)
-        serializer=NotificationSerializer(data=notification)
-        if serializer.is_valid():
-            serializer.save()
-            print (serializer.data)
-            print("Notification created")
-        else:
-            print(serializer.errors)
+        notify, createed= Notification.objects.get_or_create(title=notification['title'], description=notification['description'], event=instance)
+        notify.users.set(users_id)

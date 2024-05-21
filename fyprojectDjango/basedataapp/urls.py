@@ -193,7 +193,7 @@ urlpatterns = [
         name="parent-structure-all",
     ),
     path(
-        "structure/child_structures/all/",
+        "structure/children_structures/all/",
         structure_views.structure_get_children,
         name="child-structure-all",
     ),

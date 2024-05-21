@@ -191,7 +191,7 @@ def Delete_Structure(request, pk):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("structure")])
 def structure_get_parents(request):
-    id= request.query_params.get("structure_id", None)
+    id= request.data.get("structure_id", None)
     structure =  get_parent_structures(id)
     serializer = Structure_Read_Serializer(structure, many=True)
     return Response(serializer.data , status=status.HTTP_200_OK)
@@ -204,3 +204,4 @@ def structure_get_children(request):
     structure =  get_children_structures(id)
     serializer = Structure_Read_Serializer(structure, many=True)
     return Response(serializer.data , status=status.HTTP_200_OK)
+    

@@ -6,8 +6,12 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from basedataapp.models import Causes, Work, Event_Type
-from basedataapp.utils import generate_Event_code, get_parent_structures
+from basedataapp.models import Causes, Structure, Work, Event_Type
+from basedataapp.utils import (
+    generate_Event_code,
+    get_children_structures,
+    get_parent_structures,
+)
 
 from django.db.models import Count
 from django.db.models.functions import TruncWeek, TruncMonth, TruncDay, TruncYear
@@ -48,8 +52,8 @@ def Add_Event(request):
     user = request.user
     structure = user.structure
     company = user.company
-    year= data.get("start_date")[:4]
-    count = Event.objects.all().count()+1
+    year = data.get("start_date")[:4]
+    count = Event.objects.all().count() + 1
     work_json = data.get("work")
     event_type = data.get("event_type")
     causes_json = data.get("event_causes")
@@ -80,19 +84,21 @@ def Add_Event(request):
 
     # Checking if data is valid and exists
     # Checking if event with the given data already exists
-    code = generate_Event_code(year= year, company=company, struc=structure, count=count )
+    code = generate_Event_code(year=year, company=company, struc=structure, count=count)
     label = code
     if Event.objects.filter(code=code).exists():
         raise serializers.ValidationError("This data already exists")
-    data["code"]= code
-    data["label"]= label
+    data["code"] = code
+    data["label"] = label
 
     serializer = Event_Serializer(data=data, context={"request": request})
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        return Response({"Error":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @api_view(["PUT"])
@@ -101,12 +107,10 @@ def Add_Event(request):
 def Update_Event(request, pk):
     event = Event.objects.get(pk=pk)
     data = request.data
-    data["code"]= event.code
-    data["label"]= event.label
+    data["code"] = event.code
+    data["label"] = event.label
 
-    data = Event_Serializer(
-        instance=event, data=data, context={"request": request}
-    )
+    data = Event_Serializer(instance=event, data=data, context={"request": request})
 
     if data.is_valid():
         data.save()
@@ -192,18 +196,20 @@ def events_this_week(request):
 @permission_classes([IsAuthenticated, custom_permission_generalization("event")])
 def events_this_year_by_month(request):
     # Define the start and end dates for the current year
-    
 
     today = datetime.now().date()
     start_of_year = today.replace(month=1, day=1)
     end_of_year = today.replace(month=12, day=31)
-    structures = request.data.get("structures")
+    structures = get_children_structures(request.user.structure.id)
     # Generate a list of months for the current year
     months_this_year = [start_of_year.replace(month=i) for i in range(1, 13)]
 
     # Query to get the count of events for each month within the current year
-    events_this_year = (#work__installation__structure__in=structures
-        Event.objects.filter(start_date__date__range=[start_of_year, end_of_year])
+    events_this_year = (  # work__installation__structure__in=structures
+        Event.objects.filter(
+            start_date__date__range=[start_of_year, end_of_year],
+            work__installation__structure__in=structures,
+        )
         .annotate(month=TruncMonth("start_date"))
         .values("month")
         .annotate(count=Count("id"))
@@ -241,51 +247,155 @@ def Delete_Event(request, pk):
 
 
 """--------------------------------------------------------------------------------------------------"""
+
+
+from datetime import datetime, timedelta
+from django.db.models import Count
+from django.db.models.functions import TruncDay
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# Define your custom_permission_generalization function or import it if defined elsewhere
+# from your_app.permissions import custom_permission_generalization
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, custom_permission_generalization("event")])
 @authentication_classes([JWTAuthentication])
 def events_by_date_range(request):
-    # Get start and end date parameters from query string
-    start_date_str = request.data.get('start_date')
-    end_date_str = request.data.get('end_date')
-    structures= request.data.get("structures")
-
-    # Parse start and end dates from query parameters
     try:
-        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-    except ValueError:
-        return Response({"error": "Invalid date format. Please provide dates in YYYY-MM-DD format."}, status=status.HTTP_400_BAD_REQUEST)
+        # Get start and end date parameters from query string
+        start_date_str = request.query_params.get("start_date")
+        end_date_str = request.query_params.get("end_date")
+        structure_ids = request.query_params.getlist("structure_ids")
+        print("this is structure ids ", structure_ids)
 
-    # Query to get the count of events for each day within the provided date range
-    events_by_date_range = (
-        Event.objects.filter(start_date__date__range=[start_date, end_date], work__installation__structure__in=structures)
-        .annotate(day=TruncDay("start_date"))
-        .values("day")
-        .annotate(count=Count("id"))
-    )
-    # Create a dictionary to hold the counts for each day
-    events_per_day = {item["day"].date(): item["count"] for item in events_by_date_range}
-    # Prepare the response data
-    response_data = [
-        {"day": date.strftime("%Y-%m-%d"), "count": count}
-        for date, count in events_per_day.items()
-    ]
-    if not response_data:
-        return Response(data= {"day": "0", "count":0}, status=status.HTTP_200_OK)
-    return Response(response_data, status=status.HTTP_200_OK)
+        # Parse start and end dates from query parameters
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return Response(
+                {
+                    "error": "Invalid date format. Please provide dates in YYYY-MM-DD format."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Ensure end_date is not before start_date
+        if end_date < start_date:
+            return Response(
+                {"error": "End date must be on or after start date."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Filter events by the date range and the provided structure IDs
+        if structure_ids:
+
+            date_range = [
+                start_date + timedelta(days=i)
+                for i in range((end_date - start_date).days + 1)
+            ]
+            data = []
+            for structure_id in structure_ids:
+                events = (
+                    Event.objects.filter(
+                        start_date__date__range=[start_date, end_date],
+                        work__installation__structure=structure_id,
+                    )
+                    .annotate(day=TruncDay("start_date"))
+                    .values("day")
+                    .annotate(count=Count("id"))
+                )
+
+                # Create a dictionary to map each date to its count
+                event_dict = {
+                    event["day"].strftime("%Y-%m-%d"): event["count"]
+                    for event in events
+                }
+
+                # Initialize data_events with zero counts for all dates in the range
+                data_events = [{"day": day, "count": 0} for day in date_range]
+                # Update data_events with actual counts from events
+                for event in data_events:
+                    if event["day"].strftime("%Y-%m-%d") in event_dict:
+                        event["count"] = event_dict[event["day"].strftime("%Y-%m-%d")]
+                print(data_events, "this is data_events\n")
+                data.append(
+                    {
+                        "structure_code": Structure.objects.get(id=structure_id).code,
+                        "events": data_events,
+                    }
+                )
+                print(data, "this is data\n")
+                return Response(data, status=status.HTTP_200_OK)
+        else:
+            
+            structure_id = request.user.structure.id
+            structure_ids = [
+                structure_id
+            ]  # Use the user's structure ID for further processing
+            print("this is one item length", len(structure_ids), "\n")
+            events_by_date_range = (
+                Event.objects.filter(
+                    start_date__date__range=[start_date, end_date],
+                    work__installation__structure=structure_id,
+                )
+                .annotate(day=TruncDay("start_date"))
+                .values("day", "work__installation__structure")
+                .annotate(count=Count("id"))
+            )
+
+            # Generate a list of all days in the date range
+            days_of_range = [
+                start_date + timedelta(days=i)
+                for i in range((end_date - start_date).days + 1)
+            ]
+            # Fetch structure names
+            structure = Structure.objects.get(id=structure_id)
+            response = [
+                {
+                    "structure_code": structure.code,
+                    "events": [
+                        {"day": event["day"], "count": event["count"]}
+                        for event in events_by_date_range
+                    ],
+                }
+            ]
+            # Create a dictionary to hold the counts for each day and structure
+            # Prepare the response data
+            return Response(response, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(repr(e))
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    # Generate a list of all days in the date range
+
+
 """--------------------------------------------------------------------------------"""
+
+
 @api_view(["GET"])
 def get_events(request):
     user = request.user
     if is_kernel(user):
-        events= Event.objects.all()
-        serializer = Event_Read_Serializer(events, many= True)
-        return Response(serializer.data, status= status.HTTP_200_OK)
+        events = Event.objects.all()
+        serializer = Event_Read_Serializer(events, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     elif user.structure is None:
-        events = Event.objects.none()  # Return an empty queryset if user has no structure
-        serializer = Event_Read_Serializer(events, many= True)
-        return Response(serializer.data, status= status.HTTP_200_OK)
+        events = (
+            Event.objects.none()
+        )  # Return an empty queryset if user has no structure
+        serializer = Event_Read_Serializer(events, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # Initialize a list to store events from all parent structures
     events = []
@@ -294,10 +404,14 @@ def get_events(request):
     current_structure = user.structure
 
     # Traverse the hierarchy until there's no parent structure left
-    get_parent_structures(current_structure)
+    structures = get_children_structures(current_structure)
+    events = Event.objects.filter(
+        work__installation__structure__in=structures
+    ).order_by("structure")
     serializer = Event_Read_Serializer(events, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
 """
 current_user = event.created_by
 users_list = []
