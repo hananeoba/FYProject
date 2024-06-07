@@ -15,7 +15,7 @@ class Event_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
 class Event_Read_Serializer(CommonSerializerMixin, serializers.ModelSerializer):
     work = Work_Read_Serializer()
     event_type = Event_Type_Serializer()
-    creted_by = UserSerializer()
+    created_by = UserSerializer()
     
     class Meta:
         model = Event

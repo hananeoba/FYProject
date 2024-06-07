@@ -14,6 +14,7 @@ from basedataapp.utils import (
 )
 
 from django.db.models import Count
+from django.db.models import Q
 from django.db.models.functions import TruncWeek, TruncMonth, TruncDay, TruncYear
 from datetime import datetime, timedelta
 
@@ -207,8 +208,11 @@ def events_this_year_by_month(request):
     # Query to get the count of events for each month within the current year
     events_this_year = (  # work__installation__structure__in=structures
         Event.objects.filter(
-            start_date__date__range=[start_of_year, end_of_year],
-            work__installation__structure__in=structures,
+            Q(
+                start_date__date__range=[start_of_year, end_of_year],
+                work__installation__structure__in=structures,
+            )
+            | Q(created_by=request.user.id)
         )
         .annotate(month=TruncMonth("start_date"))
         .values("month")
@@ -275,7 +279,6 @@ def events_by_date_range(request):
         start_date_str = request.query_params.get("start_date")
         end_date_str = request.query_params.get("end_date")
         structure_ids = request.query_params.getlist("structure_ids")
-        print("this is structure ids ", structure_ids)
 
         # Parse start and end dates from query parameters
         try:
@@ -297,7 +300,6 @@ def events_by_date_range(request):
             )
         # Filter events by the date range and the provided structure IDs
         if structure_ids:
-
             date_range = [
                 start_date + timedelta(days=i)
                 for i in range((end_date - start_date).days + 1)
@@ -326,26 +328,20 @@ def events_by_date_range(request):
                 for event in data_events:
                     if event["day"].strftime("%Y-%m-%d") in event_dict:
                         event["count"] = event_dict[event["day"].strftime("%Y-%m-%d")]
-                print(data_events, "this is data_events\n")
                 data.append(
                     {
                         "structure_code": Structure.objects.get(id=structure_id).code,
                         "events": data_events,
                     }
                 )
-                print(data, "this is data\n")
-                return Response(data, status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)
         else:
-            
-            structure_id = request.user.structure.id
-            structure_ids = [
-                structure_id
-            ]  # Use the user's structure ID for further processing
-            print("this is one item length", len(structure_ids), "\n")
+
+            user_id = request.user.id
             events_by_date_range = (
                 Event.objects.filter(
                     start_date__date__range=[start_date, end_date],
-                    work__installation__structure=structure_id,
+                    created_by=user_id,
                 )
                 .annotate(day=TruncDay("start_date"))
                 .values("day", "work__installation__structure")
@@ -401,12 +397,12 @@ def get_events(request):
     events = []
 
     # Start from the current user's structure
-    current_structure = user.structure
+    current_structure = user.structure.id
 
     # Traverse the hierarchy until there's no parent structure left
     structures = get_children_structures(current_structure)
     events = Event.objects.filter(
-        work__installation__structure__in=structures
+        Q(work__installation__structure__in=structures) | Q(created_by=request.user.id)
     ).order_by("structure")
     serializer = Event_Read_Serializer(events, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)

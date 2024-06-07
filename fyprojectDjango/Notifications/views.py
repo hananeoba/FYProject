@@ -18,19 +18,17 @@ from userapp.models import AdminUser
 @api_view(["GET"])
 @authentication_classes([JWTAuthentication])
 def get_Notification(request):
-    notification = Notification.objects.filter(users=request.user.id)
-    #notification_user= Notification_User.objects.filter(user_id=request.user.id)
-    #print(notification_user)
-    notification = NotificationSerializer(notification, many=True)
-    return Response(notification.data)
+    notification = Notification.objects.filter(users=request.user.id).order_by("-date")
+    notification_ser = NotificationSerializer(notification, many=True)
+    return Response(notification_ser.data)
 
 
 @api_view(["GET"])
 @authentication_classes([JWTAuthentication])
 def get_New_Notification(request):
     notification = Notification.objects.filter(users=request.user.id).latest("id")
-    notification = NotificationSerializer(notification)
-    return Response(notification.data, status=status.HTTP_200_OK)
+    notification_ser = NotificationSerializer(notification)
+    return Response(notification_ser.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -39,7 +37,9 @@ def get_New_Notification(request):
 def set_Notification_Read(request):
     try:
         # Retrieve the specific Notification_User instance
-        notification = Notification_User.objects.get(user_id=request.user.id, notification_id=request.data["notification_id"])
+        notification = Notification_User.objects.get(
+            user_id=request.user.id, notification_id=request.data["notification_id"]
+        )
         return Response(
             status=status.HTTP_200_OK, data={"message": "Notification marked as read"}
         )

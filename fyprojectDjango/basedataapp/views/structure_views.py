@@ -200,8 +200,10 @@ def structure_get_parents(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated, custom_permission_generalization("structure")])
 def structure_get_children(request):
-    id= request.query_params.get("structure_id", None)
-    structure =  get_children_structures(id)
-    serializer = Structure_Read_Serializer(structure, many=True)
-    return Response(serializer.data , status=status.HTTP_200_OK)
-    
+    try:
+        id= request.user.structure.id
+        structure =  get_children_structures(id)
+        serializer = Structure_Read_Serializer(structure, many=True)
+        return Response(serializer.data , status=status.HTTP_200_OK)   
+    except Exception as e:
+        return Response(status=status.HTTP_404_NOT_FOUND, data= str(e))
