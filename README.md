@@ -16,7 +16,7 @@ Final Year Project API
 - [🙏 Acknowledgements](#🙏-acknowledgements)
 - [📝 License](#📝-license)
 
-# 📖 Fake Store
+# 📖 SICIO APP
 
 **Final Year Project**
 is the backend of my master's project that helps archiving and notifying administration hierarchy on the operational interruption events that have occured :
@@ -31,9 +31,8 @@ is the backend of my master's project that helps archiving and notifying adminis
 
 This project was created with following technologies:
 
-- [Django Rest Framework]([https://github.com/hananeoba/fakestore/blob/dev/ReactNative/fakeStore/README.md](https://www.django-rest-framework.org/))
-- Next JS](https://github.com/hananeoba/fakestore/blob/dev/NextJs/README.md)
-- [FakeStoreAPI](https://fakestoreapi.com/)
+- Django REST Framework
+
 
 ## Key Features
 
@@ -62,7 +61,7 @@ Clone this repository to your desired folder:
 
 ```sh
   cd my-folder
-  git clone https://github.com/hananeoba/fakestore.git
+  git clone https://github.com/hananeoba/FYProject.git
 
 ```
 
